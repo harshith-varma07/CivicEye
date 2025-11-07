@@ -1,0 +1,31 @@
+# Backend
+backend/node_modules/
+backend/.env
+backend/uploads/
+backend/coverage/
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+frontend/build/
+frontend/coverage/
+
+# AI Services
+ai_services/__pycache__/
+ai_services/*.py[cod]
+ai_services/.env
+ai_services/models/
+ai_services/venv/
+
+# Contracts
+contracts/node_modules/
+contracts/.env
+contracts/cache/
+contracts/artifacts/
+contracts/coverage/
+
+# General
+.DS_Store
+*.log
+.idea/
+.vscode/
