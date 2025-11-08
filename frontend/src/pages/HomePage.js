@@ -67,17 +67,6 @@ const HomePage = () => {
     },
   };
 
-  const cardHoverVariants = {
-    hover: {
-      scale: 1.05,
-      rotateY: 5,
-      transition: {
-        duration: 0.3,
-        ease: 'easeInOut',
-      },
-    },
-  };
-
   return (
     <>
       <AppBar position="static" elevation={0}>
