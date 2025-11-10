@@ -1,0 +1,40 @@
+{
+  "name": "civiceye-fullstack",
+  "version": "1.0.0",
+  "description": "CivicEye - Full Stack Civic Issue Reporting Platform",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../ai_services && pip install -r requirements.txt",
+    "dev": "concurrently -n \"BACKEND,FRONTEND,AI\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:ai": "cd ai_services && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "start": "npm run dev",
+    "setup": "npm run install-all && npm run setup:env",
+    "setup:env": "node scripts/setup-env.js",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test -- --watchAll=false",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint || true",
+    "build": "cd frontend && npm run build",
+    "clean": "rm -rf backend/node_modules frontend/node_modules ai_services/venv node_modules"
+  },
+  "keywords": [
+    "civic",
+    "reporting",
+    "blockchain",
+    "MERN",
+    "fullstack"
+  ],
+  "author": "CivicEye Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

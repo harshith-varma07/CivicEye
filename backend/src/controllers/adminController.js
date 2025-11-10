@@ -1,5 +1,4 @@
 const User = require('../models/User');
-const generateToken = require('../utils/generateToken');
 const { sendNotification } = require('../utils/notification');
 
 // @desc    Get all pending user registrations

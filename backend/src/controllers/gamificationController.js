@@ -61,58 +61,38 @@ const getBadges = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check and award new badges
-    const issueCount = await Issue.countDocuments({ reportedBy: user._id });
-    const resolvedCount = await Issue.countDocuments({
-      reportedBy: user._id,
-      status: 'resolved',
-    });
+    // Parallel execution of count queries
+    const [issueCount, resolvedCount] = await Promise.all([
+      Issue.countDocuments({ reportedBy: user._id }),
+      Issue.countDocuments({
+        reportedBy: user._id,
+        status: 'resolved',
+      }),
+    ]);
 
     const newBadges = [];
+    
+    // Use Set for O(1) badge name lookups instead of O(n) array.find()
+    const existingBadgeNames = new Set(user.badges.map(b => b.name));
 
-    // First Issue Badge
-    if (issueCount >= 1 && !user.badges.find(b => b.name === 'First Issue')) {
-      newBadges.push({
-        name: 'First Issue',
-        earnedAt: new Date(),
-        icon: '🎯',
-      });
-    }
+    // Badge definitions with conditions
+    const badgeConditions = [
+      { name: 'First Issue', condition: issueCount >= 1, icon: '🎯' },
+      { name: 'Active Reporter', condition: issueCount >= 10, icon: '📢' },
+      { name: 'Super Reporter', condition: issueCount >= 50, icon: '⭐' },
+      { name: 'Problem Solver', condition: resolvedCount >= 5, icon: '✅' },
+      { name: 'Credit Master', condition: user.civicCredits >= 1000, icon: '💰' },
+    ];
 
-    // Active Reporter Badge
-    if (issueCount >= 10 && !user.badges.find(b => b.name === 'Active Reporter')) {
-      newBadges.push({
-        name: 'Active Reporter',
-        earnedAt: new Date(),
-        icon: '📢',
-      });
-    }
-
-    // Super Reporter Badge
-    if (issueCount >= 50 && !user.badges.find(b => b.name === 'Super Reporter')) {
-      newBadges.push({
-        name: 'Super Reporter',
-        earnedAt: new Date(),
-        icon: '⭐',
-      });
-    }
-
-    // Problem Solver Badge
-    if (resolvedCount >= 5 && !user.badges.find(b => b.name === 'Problem Solver')) {
-      newBadges.push({
-        name: 'Problem Solver',
-        earnedAt: new Date(),
-        icon: '✅',
-      });
-    }
-
-    // Credit Master Badge
-    if (user.civicCredits >= 1000 && !user.badges.find(b => b.name === 'Credit Master')) {
-      newBadges.push({
-        name: 'Credit Master',
-        earnedAt: new Date(),
-        icon: '💰',
-      });
+    // Check and add new badges efficiently
+    for (const badge of badgeConditions) {
+      if (badge.condition && !existingBadgeNames.has(badge.name)) {
+        newBadges.push({
+          name: badge.name,
+          earnedAt: new Date(),
+          icon: badge.icon,
+        });
+      }
     }
 
     if (newBadges.length > 0) {
@@ -142,22 +122,25 @@ const getUserStats = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const totalIssues = await Issue.countDocuments({ reportedBy: userId });
-    const resolvedIssues = await Issue.countDocuments({
-      reportedBy: userId,
-      status: 'resolved',
-    });
-    const pendingIssues = await Issue.countDocuments({
-      reportedBy: userId,
-      status: { $in: ['pending', 'verified', 'assigned', 'in-progress'] },
-    });
+    // Execute all queries in parallel for better performance
+    const [totalIssues, resolvedIssues, pendingIssues, upvoteAggregation] = await Promise.all([
+      Issue.countDocuments({ reportedBy: userId }),
+      Issue.countDocuments({
+        reportedBy: userId,
+        status: 'resolved',
+      }),
+      Issue.countDocuments({
+        reportedBy: userId,
+        status: { $in: ['pending', 'verified', 'assigned', 'in-progress'] },
+      }),
+      // Use aggregation to calculate total upvotes in a single query
+      Issue.aggregate([
+        { $match: { reportedBy: userId } },
+        { $group: { _id: null, totalUpvotes: { $sum: '$upvoteCount' } } },
+      ]),
+    ]);
 
-    // Get total upvotes received
-    const issuesWithUpvotes = await Issue.find({ reportedBy: userId });
-    const totalUpvotes = issuesWithUpvotes.reduce(
-      (sum, issue) => sum + issue.upvoteCount,
-      0
-    );
+    const totalUpvotes = upvoteAggregation.length > 0 ? upvoteAggregation[0].totalUpvotes : 0;
 
     res.json({
       civicCredits: user.civicCredits,

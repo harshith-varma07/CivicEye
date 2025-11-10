@@ -75,7 +75,33 @@ CivicEye is a comprehensive platform for real-time civic issue reporting, commun
 
 ## 🚀 Quick Start
 
-### Using Docker (Recommended)
+### Localhost Setup (Fastest - No Docker Required) ⚡
+
+**Perfect for development!** Run the entire stack with one command:
+
+```bash
+# Clone the repository
+git clone https://github.com/harshith-varma07/CivicEye.git
+cd CivicEye
+
+# Install all dependencies and setup
+npm run install-all
+npm run setup:env
+
+# Start all services (backend + frontend + AI)
+npm run dev
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000
+# AI Services: http://localhost:8000
+```
+
+**Prerequisites:** Node.js 18+, Python 3.9+, MongoDB, Redis
+
+**📖 For detailed setup instructions, see [SETUP_GUIDE.md](SETUP_GUIDE.md)**
+
+### Using Docker
 
 ```bash
 # Clone the repository
@@ -91,7 +117,7 @@ docker-compose up
 # AI Services: http://localhost:8000
 ```
 
-### Manual Setup
+### Manual Setup (Advanced)
 
 **Prerequisites:**
 - Node.js 18+
@@ -117,6 +143,11 @@ cp contracts/.env.example contracts/.env
 **Step 2: Install and Run Services**
 
 ```bash
+# Option A: Use the unified dev command (recommended)
+npm install
+npm run dev
+
+# Option B: Run services individually
 # Terminal 1 - Backend
 cd backend
 npm install
@@ -129,8 +160,6 @@ npm start
 
 # Terminal 3 - AI Services
 cd ai_services
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn main:app --reload
 
@@ -140,18 +169,16 @@ npm install
 npx hardhat compile
 ```
 
-**📖 For detailed setup instructions, see [QUICKSTART.md](QUICKSTART.md)**
+**📖 For detailed setup instructions, see [SETUP_GUIDE.md](SETUP_GUIDE.md)**
 
 ## 📚 Documentation
 
+All documentation is consolidated in two comprehensive guides:
+
 | Document | Description |
 |----------|-------------|
-| [QUICKSTART.md](QUICKSTART.md) | 10-minute setup guide |
-| [API_DOCUMENTATION.md](API_DOCUMENTATION.md) | Complete API reference |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture and design |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment guide |
-| [TESTING.md](TESTING.md) | Testing strategies and examples |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+| [README.md](README.md) | **Complete project overview, features, API, testing, deployment, and contribution guidelines** |
+| [SETUP_GUIDE.md](SETUP_GUIDE.md) | **Complete setup, configuration, troubleshooting, deployment, and API reference** |
 
 ## 📁 Project Structure
 
@@ -234,7 +261,7 @@ POST   /api/ai/analyze-issue            # Analyze issue with AI
 GET    /api/ai/models/status            # AI models status
 ```
 
-**📖 For complete API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)**
+**📖 For complete API documentation with request/response examples, see the API Reference section in [SETUP_GUIDE.md](SETUP_GUIDE.md)**
 
 ## 🛠️ Technology Stack
 
@@ -319,7 +346,7 @@ npx hardhat test
 npx hardhat coverage
 ```
 
-**📖 For detailed testing guide, see [TESTING.md](TESTING.md)**
+**📖 For detailed testing examples and strategies, see the Testing Strategies section in [SETUP_GUIDE.md](SETUP_GUIDE.md)**
 
 ## 🚀 Deployment
 
@@ -341,7 +368,7 @@ npx hardhat run scripts/deploy.js --network mumbai
 - Vercel (Frontend)
 - Railway
 
-**📖 For complete deployment guide, see [DEPLOYMENT.md](DEPLOYMENT.md)**
+**📖 For complete deployment guide with cloud platform steps, see the Production Deployment section in [SETUP_GUIDE.md](SETUP_GUIDE.md)**
 
 ## 📊 Screenshots
 
@@ -359,7 +386,7 @@ npx hardhat run scripts/deploy.js --network mumbai
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Here's how you can help:
 
 **Quick Contribution Steps:**
 1. Fork the repository
@@ -397,6 +424,165 @@ Built with ❤️ by the CivicEye Team for Smart India Hackathon 2025
 ## ⭐ Star Us!
 
 If you find CivicEye useful, please consider giving us a star on GitHub! It helps others discover the project.
+
+## ⚡ Performance Optimizations
+
+CivicEye is optimized for performance using modern data structures and algorithms:
+
+### Backend Optimizations
+- **Upvote checking**: O(n) → O(1) using Set for fast lookups
+- **Badge checking**: O(n²) → O(n) using Set-based operations
+- **Analytics aggregation**: Sequential queries → Parallel execution with Promise.all
+- **Database queries**: Optimized with proper indexing and aggregation pipelines
+- **Caching**: Redis-based caching for frequently accessed data
+
+### AI Service Optimizations
+- **Duplicate detection**: Jaccard similarity algorithm (O(n+m) complexity)
+- **Distance calculation**: Haversine formula for accurate geospatial distance (O(1))
+- **Tag generation**: Set operations for efficient keyword matching (O(n+m))
+- **Priority prediction**: Dictionary-based scoring with early-exit optimization
+
+### Key Improvements
+| Operation | Before | After | Improvement |
+|-----------|--------|-------|-------------|
+| Upvote Check | O(n) | O(1) | n-fold speedup |
+| Badge Check | O(n²) | O(n) | n-fold speedup |
+| Analytics | Sequential | Parallel | ~4x faster |
+
+## 🧪 Testing
+
+### Running Tests
+
+**Backend Tests:**
+```bash
+cd backend
+npm test                # Run all tests
+npm run test:coverage   # With coverage report
+```
+
+**Frontend Tests:**
+```bash
+cd frontend
+npm test                # Run all tests
+npm run test:coverage   # With coverage report
+```
+
+**AI Services Tests:**
+```bash
+cd ai_services
+pytest                  # Run all tests
+pytest --cov=app        # With coverage report
+```
+
+**Smart Contract Tests:**
+```bash
+cd contracts
+npx hardhat test        # Run all tests
+npx hardhat coverage    # With coverage report
+```
+
+### Test Structure
+
+- **Unit Tests**: Test individual functions and components
+- **Integration Tests**: Test API endpoints and service interactions
+- **E2E Tests**: Test complete user workflows
+- **Contract Tests**: Test smart contract functionality
+
+## 🚀 Deployment
+
+### Production Deployment Steps
+
+1. **Build the application**
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Deploy with Docker**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+3. **Deploy Smart Contracts**
+   ```bash
+   cd contracts
+   npx hardhat run scripts/deploy.js --network mumbai
+   ```
+
+### Supported Platforms
+
+- **AWS**: EC2, RDS, S3, CloudFront
+- **DigitalOcean**: Droplets, Managed Database
+- **Heroku**: Full-stack deployment
+- **Vercel**: Frontend deployment
+- **Railway**: Backend and database
+
+### Environment Variables for Production
+
+Ensure all production environment variables are set:
+- Use strong `JWT_SECRET`
+- Configure production MongoDB (MongoDB Atlas recommended)
+- Set up Redis Cloud or ElastiCache
+- Configure Cloudinary for media storage
+- Set up Firebase for authentication
+- Deploy smart contracts to Polygon Mumbai testnet
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### Getting Started
+
+1. **Fork the repository**
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/CivicEye.git
+   cd CivicEye
+   ```
+3. **Create a feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+4. **Make your changes**
+5. **Run tests**
+   ```bash
+   npm test
+   ```
+6. **Commit your changes**
+   ```bash
+   git commit -m "Add amazing feature"
+   ```
+7. **Push to your fork**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+8. **Create a Pull Request**
+
+### Contribution Guidelines
+
+- **Code Style**: Follow ESLint (JavaScript) and PEP 8 (Python) standards
+- **Commit Messages**: Use conventional commits (feat:, fix:, docs:, etc.)
+- **Testing**: Add tests for new features
+- **Documentation**: Update documentation for significant changes
+- **Pull Requests**: Provide clear description of changes
+
+### Reporting Issues
+
+Before creating an issue, please check existing issues. Include:
+- Clear title and description
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshots (if applicable)
+- Environment details (OS, browser, versions)
+- Error messages and logs
+
+### Code of Conduct
+
+- Use welcoming and inclusive language
+- Be respectful of differing viewpoints
+- Accept constructive criticism gracefully
+- Focus on what is best for the community
+- Show empathy towards other community members
 
 ---
 

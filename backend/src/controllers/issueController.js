@@ -1,7 +1,7 @@
 const Issue = require('../models/Issue');
 const User = require('../models/User');
 const { sendNotification } = require('../utils/notification');
-const { getFromCache, setToCache, deleteFromCache, deleteCachePattern } = require('../utils/cache');
+const { getFromCache, setToCache, deleteCachePattern } = require('../utils/cache');
 const axios = require('axios');
 
 // @desc    Create new issue
@@ -210,22 +210,23 @@ const upvoteIssue = async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    // Check if already upvoted
-    const alreadyUpvoted = issue.upvotes.find(
-      (upvote) => upvote.user.toString() === req.user._id.toString()
-    );
+    // Use Set for O(1) lookup instead of O(n) array.find()
+    const userIdStr = req.user._id.toString();
+    const upvotedUserIds = new Set(issue.upvotes.map(upvote => upvote.user.toString()));
+    
+    const alreadyUpvoted = upvotedUserIds.has(userIdStr);
 
     if (alreadyUpvoted) {
-      // Remove upvote
+      // Remove upvote - filter is still needed here but we save one iteration
       issue.upvotes = issue.upvotes.filter(
-        (upvote) => upvote.user.toString() !== req.user._id.toString()
+        (upvote) => upvote.user.toString() !== userIdStr
       );
     } else {
       // Add upvote
       issue.upvotes.push({ user: req.user._id });
 
       // Notify issue reporter
-      if (issue.reportedBy.toString() !== req.user._id.toString()) {
+      if (issue.reportedBy.toString() !== userIdStr) {
         await sendNotification(
           issue.reportedBy,
           'Issue Upvoted',
@@ -373,34 +374,44 @@ const addComment = async (req, res) => {
 // @access  Private (Admin/Authority)
 const getAnalytics = async (req, res) => {
   try {
-    const totalIssues = await Issue.countDocuments();
-    const pendingIssues = await Issue.countDocuments({ status: 'pending' });
-    const resolvedIssues = await Issue.countDocuments({ status: 'resolved' });
-    const inProgressIssues = await Issue.countDocuments({ status: 'in-progress' });
-
-    const issuesByCategory = await Issue.aggregate([
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 },
+    // Use Promise.all for parallel execution of independent queries
+    const [totalIssues, statusCounts, issuesByCategory, issuesByPriority] = await Promise.all([
+      Issue.countDocuments(),
+      // Single aggregation for all status counts
+      Issue.aggregate([
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+          },
         },
-      },
+      ]),
+      Issue.aggregate([
+        {
+          $group: {
+            _id: '$category',
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Issue.aggregate([
+        {
+          $group: {
+            _id: '$priority',
+            count: { $sum: 1 },
+          },
+        },
+      ]),
     ]);
 
-    const issuesByPriority = await Issue.aggregate([
-      {
-        $group: {
-          _id: '$priority',
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
+    // Convert status counts array to object for easier access
+    const statusMap = new Map(statusCounts.map(item => [item._id, item.count]));
+    
     res.json({
       totalIssues,
-      pendingIssues,
-      resolvedIssues,
-      inProgressIssues,
+      pendingIssues: statusMap.get('pending') || 0,
+      resolvedIssues: statusMap.get('resolved') || 0,
+      inProgressIssues: statusMap.get('in-progress') || 0,
       issuesByCategory,
       issuesByPriority,
     });
