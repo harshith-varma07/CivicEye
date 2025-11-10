@@ -1,7 +1,7 @@
 const Issue = require('../models/Issue');
 const User = require('../models/User');
 const { sendNotification } = require('../utils/notification');
-const { getFromCache, setToCache, deleteFromCache, deleteCachePattern } = require('../utils/cache');
+const { getFromCache, setToCache, deleteCachePattern } = require('../utils/cache');
 const axios = require('axios');
 
 // @desc    Create new issue
