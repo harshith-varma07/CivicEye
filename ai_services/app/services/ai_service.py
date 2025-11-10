@@ -89,7 +89,7 @@ class AIService:
             return []
     
     def _generate_tags(self, text, category):
-        """Generate tags from issue text"""
+        """Generate tags from issue text using optimized set operations"""
         text_lower = text.lower()
         
         # Category-specific tags
@@ -104,22 +104,32 @@ class AIService:
             'building': ['illegal', 'safety', 'construction']
         }
         
-        tags = [category]
+        # Use set for O(1) addition and automatic deduplication
+        tags = {category}
         
         # Add relevant tags
         keywords = tag_keywords.get(category, [])
         for keyword in keywords:
             if keyword in text_lower:
-                tags.append(keyword)
+                tags.add(keyword)
         
-        # Add urgency tags
-        if any(word in text_lower for word in ['urgent', 'emergency', 'dangerous', 'critical']):
-            tags.append('urgent')
+        # Urgency keywords - use set for faster lookup
+        urgency_words = {'urgent', 'emergency', 'dangerous', 'critical'}
+        safety_words = {'safety', 'danger', 'risk', 'hazard'}
         
-        if any(word in text_lower for word in ['safety', 'danger', 'risk', 'hazard']):
-            tags.append('safety')
+        # Split text into words once for efficient searching
+        text_words = set(text_lower.split())
         
-        return list(set(tags))[:5]  # Return up to 5 unique tags
+        # Check for urgency and safety tags using set intersection
+        if text_words & urgency_words:
+            tags.add('urgent')
+        
+        if text_words & safety_words:
+            tags.add('safety')
+        
+        # Return up to 5 unique tags (already unique due to set)
+        return list(tags)[:5]
+
 
 # Global instance
 ai_service = AIService()

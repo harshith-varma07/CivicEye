@@ -75,7 +75,33 @@ CivicEye is a comprehensive platform for real-time civic issue reporting, commun
 
 ## 🚀 Quick Start
 
-### Using Docker (Recommended)
+### Localhost Setup (Fastest - No Docker Required) ⚡
+
+**Perfect for development!** Run the entire stack with one command:
+
+```bash
+# Clone the repository
+git clone https://github.com/harshith-varma07/CivicEye.git
+cd CivicEye
+
+# Install all dependencies and setup
+npm run install-all
+npm run setup:env
+
+# Start all services (backend + frontend + AI)
+npm run dev
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:5000
+# AI Services: http://localhost:8000
+```
+
+**Prerequisites:** Node.js 18+, Python 3.9+, MongoDB, Redis
+
+**📖 For detailed localhost setup, see [LOCALHOST_SETUP.md](LOCALHOST_SETUP.md)**
+
+### Using Docker
 
 ```bash
 # Clone the repository
@@ -91,7 +117,7 @@ docker-compose up
 # AI Services: http://localhost:8000
 ```
 
-### Manual Setup
+### Manual Setup (Advanced)
 
 **Prerequisites:**
 - Node.js 18+
@@ -117,6 +143,11 @@ cp contracts/.env.example contracts/.env
 **Step 2: Install and Run Services**
 
 ```bash
+# Option A: Use the unified dev command (recommended)
+npm install
+npm run dev
+
+# Option B: Run services individually
 # Terminal 1 - Backend
 cd backend
 npm install
@@ -129,8 +160,6 @@ npm start
 
 # Terminal 3 - AI Services
 cd ai_services
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn main:app --reload
 
@@ -140,12 +169,13 @@ npm install
 npx hardhat compile
 ```
 
-**📖 For detailed setup instructions, see [QUICKSTART.md](QUICKSTART.md)**
+**📖 For detailed setup instructions, see [QUICKSTART.md](QUICKSTART.md) or [LOCALHOST_SETUP.md](LOCALHOST_SETUP.md)**
 
 ## 📚 Documentation
 
 | Document | Description |
 |----------|-------------|
+| [LOCALHOST_SETUP.md](LOCALHOST_SETUP.md) | **⚡ Localhost setup guide (fastest way to start)** |
 | [QUICKSTART.md](QUICKSTART.md) | 10-minute setup guide |
 | [API_DOCUMENTATION.md](API_DOCUMENTATION.md) | Complete API reference |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture and design |
