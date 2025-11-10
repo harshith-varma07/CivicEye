@@ -30,6 +30,7 @@ const AuthorityDashboard = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [issues, setIssues] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [openStatusDialog, setOpenStatusDialog] = useState(false);

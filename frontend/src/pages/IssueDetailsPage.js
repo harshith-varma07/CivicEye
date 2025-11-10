@@ -9,7 +9,6 @@ import {
   Grid,
   Chip,
   Avatar,
-  IconButton,
   AppBar,
   Toolbar,
   TextField,
@@ -31,6 +30,7 @@ const IssueDetailsPage = () => {
 
   useEffect(() => {
     loadIssue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadIssue = async () => {

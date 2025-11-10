@@ -14,13 +14,11 @@ import {
   Toolbar,
   IconButton,
   Alert,
-  Badge,
   Menu,
   MenuItem,
   Avatar,
 } from '@mui/material';
 import { Logout, Add, EmojiEvents, AccountCircle, CardGiftcard } from '@mui/icons-material';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { issueService } from '../services/issueService';

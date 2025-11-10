@@ -40,6 +40,7 @@ const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [stats, setStats] = useState({});
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
   const [openOfficerDialog, setOpenOfficerDialog] = useState(false);
   const [openAdminDialog, setOpenAdminDialog] = useState(false);
