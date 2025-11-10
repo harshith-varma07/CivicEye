@@ -14,6 +14,8 @@ import ReportIssuePage from './pages/ReportIssuePage';
 import IssueDetailsPage from './pages/IssueDetailsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import AuthorityDashboard from './pages/AuthorityDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import ClaimRewardsPage from './pages/ClaimRewardsPage';
 
 const theme = createTheme({
   palette: {
@@ -60,7 +62,9 @@ function App() {
             <Route path="/report" element={<PrivateRoute><ReportIssuePage /></PrivateRoute>} />
             <Route path="/issues/:id" element={<IssueDetailsPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/claim-rewards" element={<PrivateRoute><ClaimRewardsPage /></PrivateRoute>} />
             <Route path="/authority" element={<PrivateRoute><AuthorityDashboard /></PrivateRoute>} />
+            <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
           </Routes>
         </Router>
         <ToastContainer position="top-right" autoClose={3000} />

@@ -19,7 +19,7 @@ const getLeaderboard = async (req, res) => {
       dateFilter = { createdAt: { $gte: monthAgo } };
     }
 
-    const topUsers = await User.find({ role: 'citizen' })
+    const topUsers = await User.find({ role: 'user' })
       .sort({ civicCredits: -1 })
       .limit(parseInt(limit))
       .select('name email avatar civicCredits badges');
@@ -172,8 +172,51 @@ const getUserStats = async (req, res) => {
   }
 };
 
+// @desc    Claim reward
+// @route   POST /api/gamification/claim-reward
+// @access  Private (User only)
+const claimReward = async (req, res) => {
+  try {
+    const { rewardId, rewardCost } = req.body;
+
+    // Only users can claim rewards
+    if (req.user.role !== 'user') {
+      return res.status(403).json({ message: 'Only users can claim rewards' });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user has enough credits
+    if (user.civicCredits < rewardCost) {
+      return res.status(400).json({ 
+        message: 'Insufficient credits',
+        required: rewardCost,
+        available: user.civicCredits 
+      });
+    }
+
+    // Deduct credits
+    user.civicCredits -= rewardCost;
+    await user.save();
+
+    res.json({
+      message: 'Reward claimed successfully',
+      rewardId,
+      creditsDeducted: rewardCost,
+      remainingCredits: user.civicCredits,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getLeaderboard,
   getBadges,
   getUserStats,
+  claimReward,
 };

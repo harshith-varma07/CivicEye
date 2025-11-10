@@ -55,6 +55,7 @@ cp .env.example .env
 npm run dev
 # Backend running on http://localhost:5000
 ```
+> Windows PowerShell: use `Copy-Item .env.example .env` (or `copy .env.example .env`) instead of `cp`.
 
 **Step 3: Frontend Setup** (New Terminal)
 ```bash
@@ -68,12 +69,13 @@ cp .env.example .env
 npm start
 # Frontend running on http://localhost:3000
 ```
+> Windows PowerShell: use `Copy-Item .env.example .env` (or `copy .env.example .env`).
 
 **Step 4: AI Services** (New Terminal)
 ```bash
 cd ai_services
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows (PowerShell): venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 cp .env.example .env
 
@@ -83,6 +85,7 @@ cp .env.example .env
 uvicorn main:app --reload
 # AI Services running on http://localhost:8000
 ```
+> Windows PowerShell: use `Copy-Item .env.example .env`. If activation is blocked by execution policy, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` first.
 
 **Step 5: Smart Contracts** (Optional for Development)
 ```bash
@@ -96,6 +99,7 @@ cp .env.example .env
 npx hardhat compile
 # Contracts compiled!
 ```
+> Windows PowerShell: use `Copy-Item .env.example .env`.
 
 ## First Time Setup
 
@@ -254,6 +258,7 @@ Solution: Ensure virtual environment is activated
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+> Windows PowerShell: activate with `venv\Scripts\Activate.ps1`. If you see torch install errors, upgrade pip (`python -m pip install --upgrade pip`) and ensure enough RAM (Torch may need >2GB during build).
 
 **Problem**: MongoDB connection failed
 ```

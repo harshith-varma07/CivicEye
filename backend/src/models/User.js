@@ -9,10 +9,20 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
-    unique: true,
+    sparse: true,
     lowercase: true,
     match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
+  },
+  aadharNumber: {
+    type: String,
+    sparse: true,
+    unique: true,
+    match: [/^\d{12}$/, 'Aadhar number must be 12 digits'],
+  },
+  officerId: {
+    type: String,
+    sparse: true,
+    unique: true,
   },
   password: {
     type: String,
@@ -24,14 +34,29 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  address: {
+    type: String,
+    trim: true,
+  },
+  pincode: {
+    type: String,
+    trim: true,
+  },
   role: {
     type: String,
-    enum: ['citizen', 'authority', 'admin'],
-    default: 'citizen',
+    enum: ['user', 'officer', 'admin'],
+    default: 'user',
+  },
+  accountStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
   },
   civicCredits: {
     type: Number,
-    default: 0,
+    default: function() {
+      return this.role === 'user' ? 0 : undefined;
+    },
   },
   badges: [{
     name: String,
@@ -54,7 +79,8 @@ const userSchema = new mongoose.Schema({
     default: 'https://via.placeholder.com/150',
   },
   department: {
-    type: String, // For authority users
+    type: String,
+    enum: ['roads', 'electricity', 'water', 'sanitation', 'parks', 'building', 'traffic', 'general'],
   },
   fcmToken: {
     type: String, // For push notifications
@@ -64,6 +90,13 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
   walletAddress: {
+    type: String,
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Admin who created this officer/admin account
+  },
+  rejectionReason: {
     type: String,
   },
 }, {

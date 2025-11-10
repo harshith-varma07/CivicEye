@@ -13,15 +13,27 @@ const createIssue = async (req, res) => {
       title,
       description,
       category,
+      department,
       location,
       media,
     } = req.body;
+
+    // Validate that user role is 'user'
+    if (req.user.role !== 'user') {
+      return res.status(403).json({ message: 'Only users can create issues' });
+    }
+
+    // Check if user is rejected
+    if (req.user.accountStatus === 'rejected') {
+      return res.status(403).json({ message: 'Cannot create issues. Your account was rejected.' });
+    }
 
     // Create issue
     const issue = await Issue.create({
       title,
       description,
       category,
+      department,
       location,
       media: media || [],
       reportedBy: req.user._id,
@@ -55,15 +67,27 @@ const createIssue = async (req, res) => {
       }
     }
 
-    // Award civic credits to reporter
-    await User.findByIdAndUpdate(req.user._id, {
-      $inc: { civicCredits: 10 },
+    // Notify officers in the department and pincode
+    const officers = await User.find({
+      role: 'officer',
+      department: department,
+      pincode: location.pincode,
     });
+
+    for (const officer of officers) {
+      await sendNotification(
+        officer._id,
+        'New Issue Reported',
+        `New ${category} issue in your area: ${title}`,
+        'new_issue',
+        { issueId: issue._id }
+      );
+    }
 
     // Clear cache
     await deleteCachePattern('issues:*');
 
-    const populatedIssue = await Issue.findById(issue._id).populate('reportedBy', 'name email avatar');
+    const populatedIssue = await Issue.findById(issue._id).populate('reportedBy', 'name aadharNumber avatar');
 
     res.status(201).json(populatedIssue);
   } catch (error) {
@@ -80,6 +104,7 @@ const getIssues = async (req, res) => {
       status,
       category,
       priority,
+      department,
       latitude,
       longitude,
       radius,
@@ -88,7 +113,7 @@ const getIssues = async (req, res) => {
     } = req.query;
 
     // Build cache key
-    const cacheKey = `issues:${JSON.stringify(req.query)}`;
+    const cacheKey = `issues:${JSON.stringify(req.query)}:${req.user ? req.user._id : 'public'}`;
     const cachedData = await getFromCache(cacheKey);
 
     if (cachedData) {
@@ -98,9 +123,18 @@ const getIssues = async (req, res) => {
     // Build query
     const query = {};
 
+    // Filter by officer's department and pincode if user is an officer
+    if (req.user && req.user.role === 'officer') {
+      query.department = req.user.department;
+      if (req.user.pincode) {
+        query['location.pincode'] = req.user.pincode;
+      }
+    }
+
     if (status) query.status = status;
     if (category) query.category = category;
     if (priority) query.priority = priority;
+    if (department) query.department = department;
 
     // Geospatial query
     if (latitude && longitude && radius) {
@@ -119,8 +153,8 @@ const getIssues = async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const issues = await Issue.find(query)
-      .populate('reportedBy', 'name email avatar civicCredits')
-      .populate('assignedTo', 'name email department')
+      .populate('reportedBy', 'name aadharNumber avatar civicCredits')
+      .populate('assignedTo', 'name officerId department')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -189,11 +223,6 @@ const upvoteIssue = async (req, res) => {
     } else {
       // Add upvote
       issue.upvotes.push({ user: req.user._id });
-
-      // Award civic credits
-      await User.findByIdAndUpdate(req.user._id, {
-        $inc: { civicCredits: 2 },
-      });
 
       // Notify issue reporter
       if (issue.reportedBy.toString() !== req.user._id.toString()) {
@@ -268,12 +297,13 @@ const updateIssueStatus = async (req, res) => {
   try {
     const { status, resolutionNotes, resolutionMedia } = req.body;
 
-    const issue = await Issue.findById(req.params.id);
+    const issue = await Issue.findById(req.params.id).populate('reportedBy');
 
     if (!issue) {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
+    const previousStatus = issue.status;
     issue.status = status;
 
     if (status === 'resolved') {
@@ -281,14 +311,16 @@ const updateIssueStatus = async (req, res) => {
       issue.resolutionNotes = resolutionNotes;
       issue.resolutionMedia = resolutionMedia || [];
 
-      // Award bonus credits to reporter
-      await User.findByIdAndUpdate(issue.reportedBy, {
-        $inc: { civicCredits: 50 },
-      });
+      // Award credits ONLY if issue was verified before resolution AND reporter is a user
+      if (previousStatus === 'verified' && issue.reportedBy.role === 'user') {
+        await User.findByIdAndUpdate(issue.reportedBy._id, {
+          $inc: { civicCredits: 50 },
+        });
+      }
 
       // Send notification to reporter
       await sendNotification(
-        issue.reportedBy,
+        issue.reportedBy._id,
         'Issue Resolved',
         `Your issue has been resolved: ${issue.title}`,
         'resolution',

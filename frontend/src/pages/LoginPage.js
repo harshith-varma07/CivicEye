@@ -8,6 +8,9 @@ import {
   Button,
   Paper,
   Link,
+  ToggleButtonGroup,
+  ToggleButton,
+  Alert,
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -15,11 +18,19 @@ import { useAuth } from '../context/AuthContext';
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [role, setRole] = useState('user');
   const [formData, setFormData] = useState({
-    email: '',
+    loginId: '',
     password: '',
   });
   const [loading, setLoading] = useState(false);
+
+  const handleRoleChange = (event, newRole) => {
+    if (newRole !== null) {
+      setRole(newRole);
+      setFormData({ loginId: '', password: '' });
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -33,13 +44,49 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(formData);
+      await login({
+        loginId: formData.loginId,
+        password: formData.password,
+        role: role,
+      });
       toast.success('Login successful!');
-      navigate('/dashboard');
+      
+      // Navigate based on role
+      if (role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getLoginIdLabel = () => {
+    switch (role) {
+      case 'user':
+        return 'Aadhar Number';
+      case 'officer':
+        return 'Officer ID';
+      case 'admin':
+        return 'Admin ID';
+      default:
+        return 'Login ID';
+    }
+  };
+
+  const getLoginIdHelperText = () => {
+    switch (role) {
+      case 'user':
+        return 'Enter your 12-digit Aadhar number';
+      case 'officer':
+        return 'Enter your Officer ID';
+      case 'admin':
+        return 'Enter your Admin ID';
+      default:
+        return '';
     }
   };
 
@@ -52,16 +99,37 @@ const LoginPage = () => {
       </Box>
 
       <Paper elevation={3} sx={{ p: 4 }}>
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+          <ToggleButtonGroup
+            value={role}
+            exclusive
+            onChange={handleRoleChange}
+            aria-label="user role"
+            fullWidth
+          >
+            <ToggleButton value="user" aria-label="citizen">
+              Citizen
+            </ToggleButton>
+            <ToggleButton value="officer" aria-label="officer">
+              Officer
+            </ToggleButton>
+            <ToggleButton value="admin" aria-label="admin">
+              Admin
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
+            label={getLoginIdLabel()}
+            name="loginId"
+            value={formData.loginId}
             onChange={handleChange}
             margin="normal"
             required
+            helperText={getLoginIdHelperText()}
+            inputProps={role === 'user' ? { maxLength: 12 } : {}}
           />
           <TextField
             fullWidth
@@ -73,6 +141,7 @@ const LoginPage = () => {
             margin="normal"
             required
           />
+
           <Button
             type="submit"
             fullWidth
@@ -85,18 +154,28 @@ const LoginPage = () => {
           </Button>
         </form>
 
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="body2">
-            Don't have an account?{' '}
-            <Link
-              component="button"
-              variant="body2"
-              onClick={() => navigate('/register')}
-            >
-              Register here
-            </Link>
-          </Typography>
-        </Box>
+        {role === 'user' && (
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2">
+              Don't have an account?{' '}
+              <Link
+                component="button"
+                variant="body2"
+                onClick={() => navigate('/register')}
+              >
+                Register here
+              </Link>
+            </Typography>
+          </Box>
+        )}
+
+        {(role === 'officer' || role === 'admin') && (
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              {role === 'officer' ? 'Officer' : 'Admin'} accounts are created by administrators only
+            </Typography>
+          </Box>
+        )}
       </Paper>
     </Container>
   );

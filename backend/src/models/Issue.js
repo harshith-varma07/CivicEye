@@ -27,6 +27,11 @@ const issueSchema = new mongoose.Schema({
       'other'
     ],
   },
+  department: {
+    type: String,
+    required: [true, 'Department is required'],
+    enum: ['roads', 'electricity', 'water', 'sanitation', 'parks', 'building', 'traffic', 'general'],
+  },
   tags: [{
     type: String,
     trim: true,

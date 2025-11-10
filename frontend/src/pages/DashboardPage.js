@@ -13,8 +13,13 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  Alert,
+  Badge,
+  Menu,
+  MenuItem,
+  Avatar,
 } from '@mui/material';
-import { Logout, Add, EmojiEvents } from '@mui/icons-material';
+import { Logout, Add, EmojiEvents, AccountCircle, CardGiftcard } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -26,10 +31,20 @@ const DashboardPage = () => {
   const { user, logout } = useAuth();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
+    // Redirect to appropriate dashboard based on role
+    if (user?.role === 'admin') {
+      navigate('/admin');
+      return;
+    }
+    if (user?.role === 'officer') {
+      navigate('/authority');
+      return;
+    }
     loadIssues();
-  }, []);
+  }, [user, navigate]);
 
   const loadIssues = async () => {
     try {
@@ -45,6 +60,24 @@ const DashboardPage = () => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfile = () => {
+    handleMenuClose();
+    // Navigate to profile page if needed
+  };
+
+  const handleClaimRewards = () => {
+    handleMenuClose();
+    navigate('/claim-rewards');
   };
 
   const getStatusColor = (status) => {
@@ -66,27 +99,71 @@ const DashboardPage = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             CivicEye Dashboard
           </Typography>
+          {user?.role === 'user' && (
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+              <Chip
+                icon={<EmojiEvents />}
+                label={`${user?.civicCredits || 0} Credits`}
+                color="warning"
+                variant="outlined"
+                sx={{ fontWeight: 'bold', color: 'white', borderColor: 'white' }}
+              />
+            </Box>
+          )}
           <IconButton color="inherit" onClick={() => navigate('/leaderboard')}>
             <EmojiEvents />
           </IconButton>
-          <Button color="inherit" onClick={handleLogout}>
-            <Logout /> Logout
-          </Button>
+          <IconButton color="inherit" onClick={handleMenuOpen}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
+              {user?.name?.charAt(0).toUpperCase()}
+            </Avatar>
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+          >
+            <MenuItem onClick={handleProfile}>
+              <AccountCircle sx={{ mr: 1 }} /> Profile
+            </MenuItem>
+            {user?.role === 'user' && (
+              <MenuItem onClick={handleClaimRewards}>
+                <CardGiftcard sx={{ mr: 1 }} /> Claim Rewards
+              </MenuItem>
+            )}
+            <MenuItem onClick={handleLogout}>
+              <Logout sx={{ mr: 1 }} /> Logout
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {user?.accountStatus === 'pending' && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            Your account is pending admin verification. You can browse and upvote issues, but some features may be limited until your account is approved.
+          </Alert>
+        )}
+        
+        {user?.accountStatus === 'approved' && user?.role === 'user' && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            ✓ Your account has been verified by admin. You have full access to all features.
+          </Alert>
+        )}
+
         <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h4">
             Welcome, {user?.name}
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => navigate('/report')}
-          >
-            Report Issue
-          </Button>
+          {user?.role === 'user' && (
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => navigate('/report')}
+            >
+              Report Issue
+            </Button>
+          )}
         </Box>
 
         <Grid container spacing={3}>

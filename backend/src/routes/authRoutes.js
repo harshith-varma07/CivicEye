@@ -15,8 +15,11 @@ router.post(
   '/register',
   [
     body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
+    body('aadharNumber').matches(/^\d{12}$/).withMessage('Valid 12-digit Aadhar number is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('phone').optional().trim(),
+    body('address').optional().trim(),
+    body('pincode').optional().trim(),
     validate,
   ],
   register
@@ -25,8 +28,9 @@ router.post(
 router.post(
   '/login',
   [
-    body('email').isEmail().withMessage('Valid email is required'),
+    body('loginId').trim().notEmpty().withMessage('Login ID is required'),
     body('password').notEmpty().withMessage('Password is required'),
+    body('role').isIn(['user', 'officer', 'admin']).withMessage('Valid role is required'),
     validate,
   ],
   login

@@ -26,7 +26,7 @@ class AnalyzeIssueResponse(BaseModel):
     similarity: float
     priority: str
     priorityScore: float
-    estimatedResolutionTime: int
+    estimatedResolutionTime: Optional[int]
 
 @router.post("/analyze-issue", response_model=AnalyzeIssueResponse)
 async def analyze_issue(request: AnalyzeIssueRequest):
@@ -45,20 +45,11 @@ async def health_check():
 @router.get("/models/status")
 async def get_models_status():
     """Get status of AI models"""
-    from app.models.categorizer import categorizer
-    
     return {
-        "categorizer": {
-            "loaded": True,
-            "trained": categorizer.is_trained
-        },
         "duplicateDetector": {
             "loaded": True
         },
         "priorityPredictor": {
-            "loaded": True
-        },
-        "maintenancePredictor": {
             "loaded": True
         }
     }

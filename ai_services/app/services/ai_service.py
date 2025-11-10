@@ -1,7 +1,5 @@
-from app.models.categorizer import categorizer
 from app.models.duplicate_detector import duplicate_detector
 from app.models.priority_predictor import priority_predictor
-from app.models.maintenance_predictor import maintenance_predictor
 from app.utils.database import db
 from datetime import datetime, timedelta
 
@@ -14,17 +12,15 @@ class AIService:
         # Combine title and description for analysis
         text = f"{issue_data['title']} {issue_data['description']}"
         
-        # 1. Category prediction
-        category_result = categorizer.predict(text)
-        predicted_category = category_result['category']
-        confidence = category_result['confidence']
+        # Use the category provided by the user
+        category = issue_data['category']
         
-        # 2. Generate tags
-        tags = self._generate_tags(text, predicted_category)
+        # 1. Generate tags
+        tags = self._generate_tags(text, category)
         
-        # 3. Check for duplicates
+        # 2. Check for duplicates
         existing_issues = await self._get_similar_issues(
-            predicted_category,
+            category,
             issue_data['location']['coordinates']
         )
         
@@ -34,31 +30,24 @@ class AIService:
             existing_issues
         )
         
-        # 4. Predict priority
+        # 3. Predict priority
         priority_result = priority_predictor.predict_priority(
-            predicted_category,
+            category,
             upvote_count=0,  # New issue
             verification_count=0,
             age_days=0
         )
         
-        # 5. Predict resolution time
-        maintenance_result = maintenance_predictor.predict_resolution_time(
-            predicted_category,
-            priority_result['priority'],
-            upvote_count=0
-        )
-        
         return {
-            'predictedCategory': predicted_category,
-            'confidence': confidence,
+            'predictedCategory': category,
+            'confidence': 1.0,  # User-selected category
             'tags': tags,
             'isDuplicate': duplicate_result['isDuplicate'],
             'duplicateOf': duplicate_result.get('duplicateOf'),
             'similarity': duplicate_result.get('similarity', 0),
             'priority': priority_result['priority'],
             'priorityScore': priority_result['score'],
-            'estimatedResolutionTime': maintenance_result['estimatedDays']
+            'estimatedResolutionTime': None
         }
     
     async def _get_similar_issues(self, category, location, radius_km=5):

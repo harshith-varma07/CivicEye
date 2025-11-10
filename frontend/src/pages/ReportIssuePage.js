@@ -38,9 +38,11 @@ const ReportIssuePage = () => {
     title: '',
     description: '',
     category: 'pothole',
+    department: 'roads',
     location: {
       coordinates: [0, 0],
       address: '',
+      pincode: '',
     },
     media: [],
   });
@@ -68,6 +70,25 @@ const ReportIssuePage = () => {
       ...prev,
       [name]: value,
     }));
+
+    // Auto-select department based on category
+    if (name === 'category') {
+      const categoryToDepartment = {
+        'pothole': 'roads',
+        'streetlight': 'electricity',
+        'garbage': 'sanitation',
+        'water': 'water',
+        'sewage': 'sanitation',
+        'traffic': 'traffic',
+        'park': 'parks',
+        'building': 'building',
+        'other': 'general',
+      };
+      setFormData(prev => ({
+        ...prev,
+        department: categoryToDepartment[value] || 'general',
+      }));
+    }
   };
 
   const handleLocationSelect = (latlng) => {
@@ -108,6 +129,11 @@ const ReportIssuePage = () => {
       return;
     }
 
+    if (!formData.location.pincode) {
+      toast.error('Please provide a pincode');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -131,6 +157,17 @@ const ReportIssuePage = () => {
     'park',
     'building',
     'other',
+  ];
+
+  const departments = [
+    { value: 'roads', label: 'Roads & Infrastructure' },
+    { value: 'electricity', label: 'Electricity' },
+    { value: 'water', label: 'Water Supply' },
+    { value: 'sanitation', label: 'Sanitation' },
+    { value: 'parks', label: 'Parks & Recreation' },
+    { value: 'building', label: 'Building & Construction' },
+    { value: 'traffic', label: 'Traffic Management' },
+    { value: 'general', label: 'General' },
   ];
 
   return (
@@ -195,6 +232,25 @@ const ReportIssuePage = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
+                  select
+                  label="Department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  required
+                  helperText="Auto-selected based on category"
+                >
+                  {departments.map((dept) => (
+                    <MenuItem key={dept.value} value={dept.value}>
+                      {dept.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
                   label="Address"
                   name="address"
                   value={formData.location.address}
@@ -203,6 +259,21 @@ const ReportIssuePage = () => {
                     location: { ...prev.location, address: e.target.value },
                   }))}
                   required
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Pincode"
+                  name="pincode"
+                  value={formData.location.pincode}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    location: { ...prev.location, pincode: e.target.value },
+                  }))}
+                  required
+                  inputProps={{ maxLength: 6 }}
                 />
               </Grid>
 

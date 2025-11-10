@@ -29,8 +29,10 @@ router.post(
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('description').trim().notEmpty().withMessage('Description is required'),
     body('category').notEmpty().withMessage('Category is required'),
+    body('department').isIn(['roads', 'electricity', 'water', 'sanitation', 'parks', 'building', 'traffic', 'general']).withMessage('Valid department is required'),
     body('location.coordinates').isArray({ min: 2, max: 2 }).withMessage('Valid coordinates required'),
     body('location.address').notEmpty().withMessage('Address is required'),
+    body('location.pincode').optional().trim(),
     validate,
   ],
   createIssue
@@ -39,9 +41,9 @@ router.post(
 router.put('/:id/upvote', protect, upvoteIssue);
 router.post('/:id/comments', protect, addComment);
 
-// Authority/Admin routes
-router.put('/:id/assign', protect, authorize('authority', 'admin'), assignIssue);
-router.put('/:id/status', protect, authorize('authority', 'admin'), updateIssueStatus);
-router.get('/analytics/stats', protect, authorize('authority', 'admin'), getAnalytics);
+// Officer/Admin routes
+router.put('/:id/assign', protect, authorize('officer', 'admin'), assignIssue);
+router.put('/:id/status', protect, authorize('officer', 'admin'), updateIssueStatus);
+router.get('/analytics/stats', protect, authorize('officer', 'admin'), getAnalytics);
 
 module.exports = router;
