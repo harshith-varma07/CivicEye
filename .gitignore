@@ -14,7 +14,7 @@ frontend/coverage/
 ai_services/__pycache__/
 ai_services/*.py[cod]
 ai_services/.env
-ai_services/models/
+ai_services/trained_models/
 ai_services/venv/
 
 # Contracts
@@ -29,3 +29,4 @@ contracts/coverage/
 *.log
 .idea/
 .vscode/
+node_modules/
