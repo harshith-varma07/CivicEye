@@ -6,10 +6,7 @@ let redisClient;
 const connectDB = async () => {
   try {
     // Connect to MongoDB
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 
     // Connect to Redis

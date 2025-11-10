@@ -53,7 +53,7 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const response = await register({
+      await register({
         name: formData.name,
         aadharNumber: formData.aadharNumber,
         password: formData.password,
