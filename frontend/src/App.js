@@ -19,13 +19,78 @@ import ClaimRewardsPage from './pages/ClaimRewardsPage';
 
 const theme = createTheme({
   palette: {
+    mode: 'light',
     primary: {
-      main: '#2196f3',
+      main: '#1976d2', // Professional blue
+      light: '#42a5f5',
+      dark: '#1565c0',
+      contrastText: '#ffffff',
     },
     secondary: {
-      main: '#f50057',
+      main: '#0288d1', // Light cyan-blue
+      light: '#03a9f4',
+      dark: '#01579b',
+      contrastText: '#ffffff',
+    },
+    background: {
+      default: '#f5f7fa', // Very light gray-blue background
+      paper: '#ffffff',
+    },
+    success: {
+      main: '#43a047', // Professional green
+      light: '#66bb6a',
+      dark: '#2e7d32',
+    },
+    info: {
+      main: '#29b6f6', // Light blue
+      light: '#4fc3f7',
+      dark: '#0288d1',
+    },
+    warning: {
+      main: '#ffa726', // Warm orange
+      light: '#ffb74d',
+      dark: '#f57c00',
+    },
+    error: {
+      main: '#ef5350', // Soft red
+      light: '#e57373',
+      dark: '#c62828',
     },
   },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontWeight: 600,
+    },
+    h2: {
+      fontWeight: 600,
+    },
+    h3: {
+      fontWeight: 600,
+    },
+    h4: {
+      fontWeight: 600,
+    },
+    h5: {
+      fontWeight: 500,
+    },
+    h6: {
+      fontWeight: 500,
+    },
+  },
+  shape: {
+    borderRadius: 8,
+  },
+  shadows: [
+    'none',
+    '0px 2px 4px rgba(0,0,0,0.05)',
+    '0px 4px 8px rgba(0,0,0,0.08)',
+    '0px 8px 16px rgba(0,0,0,0.1)',
+    '0px 12px 24px rgba(0,0,0,0.12)',
+    '0px 16px 32px rgba(0,0,0,0.14)',
+    '0px 20px 40px rgba(0,0,0,0.16)',
+    ...Array(18).fill('0px 24px 48px rgba(0,0,0,0.18)'),
+  ],
 });
 
 const PrivateRoute = ({ children }) => {
