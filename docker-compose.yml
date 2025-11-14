@@ -16,6 +16,11 @@ services:
       - mongodb_data:/data/db
     networks:
       - civiceye-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Redis Cache
   redis:
@@ -26,6 +31,11 @@ services:
       - "6379:6379"
     networks:
       - civiceye-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   # Backend API
   backend:
@@ -35,20 +45,23 @@ services:
     container_name: civiceye-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/civiceye
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/civiceye?authSource=admin
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=your-jwt-secret-key
-      - BLOCKCHAIN_RPC_URL=https://rpc-mumbai.maticvigil.com
-      - IPFS_PROJECT_ID=your-infura-project-id
-      - IPFS_PROJECT_SECRET=your-infura-project-secret
+      - JWT_SECRET=your-jwt-secret-key-change-in-production
+      - JWT_EXPIRE=7d
+      - AI_SERVICE_URL=http://ai-services:8000
+      - PORT=5000
     ports:
       - "5000:5000"
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - civiceye-network
+    command: sh -c "sleep 10 && node scripts/seed-admin.js && npm start"
 
   # AI Services
   ai-services:
@@ -58,11 +71,12 @@ services:
     container_name: civiceye-ai
     restart: unless-stopped
     environment:
-      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/civiceye
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/civiceye?authSource=admin
     ports:
       - "8000:8000"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     networks:
       - civiceye-network
 
@@ -76,12 +90,15 @@ services:
     environment:
       - REACT_APP_API_URL=http://localhost:5000/api
       - REACT_APP_AI_URL=http://localhost:8000
+      - WDS_SOCKET_PORT=0
     ports:
       - "3000:3000"
     depends_on:
       - backend
     networks:
       - civiceye-network
+    stdin_open: true
+    tty: true
 
 volumes:
   mongodb_data:
