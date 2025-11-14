@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # MongoDB Database
   mongodb:
-    image: mongo:6.0
+    image: mongo:4.4
     container_name: civiceye-mongo
     restart: unless-stopped
     environment:

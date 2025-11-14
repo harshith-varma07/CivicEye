@@ -1,10 +1,13 @@
-const { create } = require('ipfs-http-client');
+// IPFS client is disabled temporarily due to module compatibility issues
+// Use alternative storage method or upgrade to ES modules
+let ipfsClient = null;
 
-let ipfsClient;
-
-const initIPFS = () => {
+const initIPFS = async () => {
   try {
     if (process.env.IPFS_PROJECT_ID && process.env.IPFS_PROJECT_SECRET) {
+      // Dynamically import ipfs-http-client using ES module syntax
+      const { create } = await import('ipfs-http-client');
+      
       const auth = 'Basic ' + Buffer.from(
         process.env.IPFS_PROJECT_ID + ':' + process.env.IPFS_PROJECT_SECRET
       ).toString('base64');
@@ -18,6 +21,8 @@ const initIPFS = () => {
         },
       });
       console.log('IPFS Client initialized');
+    } else {
+      console.log('IPFS credentials not found, IPFS client not initialized');
     }
     return ipfsClient;
   } catch (error) {

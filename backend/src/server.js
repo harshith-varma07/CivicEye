@@ -7,7 +7,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { connectDB } = require('./config/database');
 const { initializeFirebase } = require('./config/firebase');
-const { initIPFS } = require('./config/ipfs');
+// const { initIPFS } = require('./config/ipfs'); // Temporarily disabled due to module compatibility
 const errorHandler = require('./middleware/error');
 
 // Import routes
@@ -25,8 +25,8 @@ connectDB();
 // Initialize Firebase
 initializeFirebase();
 
-// Initialize IPFS
-initIPFS();
+// Initialize IPFS (Temporarily disabled due to module compatibility)
+// initIPFS();
 
 // Middleware
 app.use(helmet());
