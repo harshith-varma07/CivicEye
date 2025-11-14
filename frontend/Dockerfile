@@ -1,21 +1,15 @@
-FROM node:18-alpine as build
+FROM node:20-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --legacy-peer-deps
+RUN npm config set fetch-timeout 600000 && \
+    npm config set fetch-retries 5 && \
+    npm install --legacy-peer-deps
 
 COPY . .
 
-RUN npm run build
-
-FROM nginx:alpine
-
-COPY --from=build /app/build /usr/share/nginx/html
-
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "start"]
