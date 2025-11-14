@@ -61,7 +61,7 @@ services:
         condition: service_healthy
     networks:
       - civiceye-network
-    command: sh -c "sleep 10 && node scripts/seed-admin.js && npm start"
+    command: sh -c "npm install --legacy-peer-deps && node scripts/seed-admin.js && npm start"
 
   # AI Services
   ai-services:
@@ -99,6 +99,7 @@ services:
       - civiceye-network
     stdin_open: true
     tty: true
+    command: sh -c "npm install --legacy-peer-deps && npm start"
 
 volumes:
   mongodb_data:
