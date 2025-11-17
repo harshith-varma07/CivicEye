@@ -2,12 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-
 COPY requirements.txt .
 
-# Install Python dependencies first (most requirements don't need build-essential)
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with trusted host flag to bypass SSL issues
+RUN pip install --no-cache-dir --upgrade pip --trusted-host pypi.org --trusted-host files.pythonhosted.org && \
+    pip install --no-cache-dir -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
 
 COPY . .
 

@@ -12,7 +12,9 @@ ENV REACT_APP_AI_URL=$REACT_APP_AI_URL
 
 COPY package*.json ./
 
-RUN npm install --legacy-peer-deps
+# Install dependencies with fallback
+RUN npm install --legacy-peer-deps --maxsockets=1 --prefer-offline || \
+    (rm -rf node_modules package-lock.json && npm install --legacy-peer-deps --maxsockets=1)
 
 COPY . .
 
