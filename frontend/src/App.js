@@ -12,7 +12,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ReportIssuePage from './pages/ReportIssuePage';
 import IssueDetailsPage from './pages/IssueDetailsPage';
-import LeaderboardPage from './pages/LeaderboardPage';
+import CommunityDashboardPage from './pages/CommunityDashboardPage';
 import AuthorityDashboard from './pages/AuthorityDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ClaimRewardsPage from './pages/ClaimRewardsPage';
@@ -126,7 +126,7 @@ function App() {
             <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
             <Route path="/report" element={<PrivateRoute><ReportIssuePage /></PrivateRoute>} />
             <Route path="/issues/:id" element={<IssueDetailsPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/community-dashboard" element={<CommunityDashboardPage />} />
             <Route path="/claim-rewards" element={<PrivateRoute><ClaimRewardsPage /></PrivateRoute>} />
             <Route path="/authority" element={<PrivateRoute><AuthorityDashboard /></PrivateRoute>} />
             <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />

@@ -58,22 +58,6 @@ const userSchema = new mongoose.Schema({
       return this.role === 'user' ? 0 : undefined;
     },
   },
-  badges: [{
-    name: String,
-    earnedAt: Date,
-    icon: String,
-  }],
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point',
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      default: [0, 0],
-    },
-  },
   avatar: {
     type: String,
     default: 'https://via.placeholder.com/150',
@@ -102,9 +86,6 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
-
-// Index for geospatial queries
-userSchema.index({ location: '2dsphere' });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {

@@ -105,7 +105,7 @@ const ClaimRewardsPage = () => {
         civicCredits: response.data.remainingCredits,
       });
 
-      toast.success(`${selectedReward.title} claimed successfully! Remaining credits: ${response.data.remainingCredits}`);
+      toast.success(`${selectedReward.title} claimed successfully! Remaining points: ${response.data.remainingCredits}`);
       setConfirmDialogOpen(false);
       setSelectedReward(null);
     } catch (error) {
@@ -137,11 +137,11 @@ const ClaimRewardsPage = () => {
             <ArrowBack />
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Claim Rewards
+            Citizen Welfare Benefits
           </Typography>
           <Chip
             icon={<EmojiEvents />}
-            label={`${user?.civicCredits || 0} Credits`}
+            label={`${user?.civicCredits || 0} Points`}
             color="warning"
             sx={{ fontWeight: 'bold' }}
           />
@@ -151,15 +151,15 @@ const ClaimRewardsPage = () => {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom>
-            🎁 Redeem Your Civic Credits
+            🎁 Citizen Welfare Benefits Program
           </Typography>
           <Typography variant="body1" color="text.secondary" paragraph>
-            Earn credits by reporting and getting your civic issues verified and resolved.
-            Use your credits to claim exciting rewards!
+            Earn Civic Appreciation Points by reporting and getting your civic issues verified and resolved.
+            Use your points to claim welfare benefits provided by your government!
           </Typography>
           <Alert severity="info" sx={{ mb: 3 }}>
-            💡 <strong>How to earn credits:</strong> Report issues, get them verified by the community, 
-            and receive <strong>50 credits</strong> when your issue is fully resolved!
+            💡 <strong>How to earn points:</strong> Report issues, get them verified by the community, 
+            and receive <strong>50 Appreciation Points</strong> when your issue is fully resolved!
           </Alert>
         </Box>
 
@@ -216,7 +216,7 @@ const ClaimRewardsPage = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                     <Chip
                       icon={<Redeem />}
-                      label={`${reward.cost} Credits`}
+                      label={`${reward.cost} Points`}
                       sx={{
                         bgcolor: reward.color,
                         color: 'white',
@@ -259,10 +259,10 @@ const ClaimRewardsPage = () => {
           <DialogContent>
             <DialogContentText>
               Are you sure you want to claim <strong>{selectedReward?.title}</strong> for{' '}
-              <strong>{selectedReward?.cost} credits</strong>?
+              <strong>{selectedReward?.cost} points</strong>?
             </DialogContentText>
             <DialogContentText sx={{ mt: 2 }}>
-              Your remaining credits will be: <strong>{(user?.civicCredits || 0) - (selectedReward?.cost || 0)}</strong>
+              Your remaining points will be: <strong>{(user?.civicCredits || 0) - (selectedReward?.cost || 0)}</strong>
             </DialogContentText>
           </DialogContent>
           <DialogActions>

@@ -1,19 +1,23 @@
 import api from './api';
 
 export const gamificationService = {
-  getLeaderboard: async (params) => {
-    const response = await api.get('/gamification/leaderboard', { params });
+  getCommunityDashboard: async (params) => {
+    const response = await api.get('/gamification/community-dashboard', { params });
     return response.data;
   },
 
-  getBadges: async () => {
-    const response = await api.get('/gamification/badges');
+  getNeighborhoodStats: async (params) => {
+    const response = await api.get('/gamification/neighborhood-stats', { params });
     return response.data;
   },
 
-  getUserStats: async (userId) => {
-    const url = userId ? `/gamification/stats/${userId}` : '/gamification/stats';
-    const response = await api.get(url);
+  getPersonalContributions: async () => {
+    const response = await api.get('/gamification/personal-contributions');
+    return response.data;
+  },
+
+  claimReward: async (rewardData) => {
+    const response = await api.post('/gamification/claim-reward', rewardData);
     return response.data;
   },
 };

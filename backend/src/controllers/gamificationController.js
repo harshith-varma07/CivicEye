@@ -1,12 +1,12 @@
 const User = require('../models/User');
 const Issue = require('../models/Issue');
 
-// @desc    Get leaderboard
-// @route   GET /api/gamification/leaderboard
+// @desc    Get community dashboard (city-wide statistics)
+// @route   GET /api/gamification/community-dashboard
 // @access  Public
-const getLeaderboard = async (req, res) => {
+const getCommunityDashboard = async (req, res) => {
   try {
-    const { limit = 10, timeframe = 'all' } = req.query;
+    const { timeframe = 'all' } = req.query;
 
     let dateFilter = {};
     if (timeframe === 'week') {
@@ -19,102 +19,119 @@ const getLeaderboard = async (req, res) => {
       dateFilter = { createdAt: { $gte: monthAgo } };
     }
 
-    const topUsers = await User.find({ role: 'user' })
-      .sort({ civicCredits: -1 })
-      .limit(parseInt(limit))
-      .select('name email avatar civicCredits badges');
-
-    // Get issue count for each user
-    const usersWithStats = await Promise.all(
-      topUsers.map(async (user) => {
-        const issueCount = await Issue.countDocuments({
-          reportedBy: user._id,
-          ...dateFilter,
-        });
-
-        return {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          avatar: user.avatar,
-          civicCredits: user.civicCredits,
-          badges: user.badges,
-          issuesReported: issueCount,
-        };
-      })
-    );
-
-    res.json(usersWithStats);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Get user badges
-// @route   GET /api/gamification/badges
-// @access  Private
-const getBadges = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Parallel execution of count queries
-    const [issueCount, resolvedCount] = await Promise.all([
-      Issue.countDocuments({ reportedBy: user._id }),
-      Issue.countDocuments({
-        reportedBy: user._id,
-        status: 'resolved',
-      }),
+    // City-wide statistics
+    const [
+      totalIssuesReported,
+      totalIssuesResolved,
+      totalActiveCitizens,
+      issuesByCategory,
+      issuesByStatus,
+      recentResolvedIssues
+    ] = await Promise.all([
+      Issue.countDocuments(dateFilter),
+      Issue.countDocuments({ status: 'resolved', ...dateFilter }),
+      User.countDocuments({ role: 'user', ...dateFilter }),
+      Issue.aggregate([
+        { $match: dateFilter },
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      Issue.aggregate([
+        { $match: dateFilter },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]),
+      Issue.find({ status: 'resolved', ...dateFilter })
+        .sort({ resolvedAt: -1 })
+        .limit(10)
+        .select('title category location resolvedAt')
     ]);
 
-    const newBadges = [];
-    
-    // Use Set for O(1) badge name lookups instead of O(n) array.find()
-    const existingBadgeNames = new Set(user.badges.map(b => b.name));
-
-    // Badge definitions with conditions
-    const badgeConditions = [
-      { name: 'First Issue', condition: issueCount >= 1, icon: '🎯' },
-      { name: 'Active Reporter', condition: issueCount >= 10, icon: '📢' },
-      { name: 'Super Reporter', condition: issueCount >= 50, icon: '⭐' },
-      { name: 'Problem Solver', condition: resolvedCount >= 5, icon: '✅' },
-      { name: 'Credit Master', condition: user.civicCredits >= 1000, icon: '💰' },
-    ];
-
-    // Check and add new badges efficiently
-    for (const badge of badgeConditions) {
-      if (badge.condition && !existingBadgeNames.has(badge.name)) {
-        newBadges.push({
-          name: badge.name,
-          earnedAt: new Date(),
-          icon: badge.icon,
-        });
-      }
-    }
-
-    if (newBadges.length > 0) {
-      user.badges.push(...newBadges);
-      await user.save();
-    }
+    const resolutionRate = totalIssuesReported > 0 
+      ? ((totalIssuesResolved / totalIssuesReported) * 100).toFixed(1)
+      : 0;
 
     res.json({
-      badges: user.badges,
-      newBadges,
+      cityWideProgress: {
+        totalIssuesReported,
+        totalIssuesResolved,
+        totalActiveCitizens,
+        resolutionRate: parseFloat(resolutionRate),
+      },
+      issuesByCategory,
+      issuesByStatus,
+      recentResolvedIssues,
+      timeframe
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get user stats
-// @route   GET /api/gamification/stats
-// @access  Private
-const getUserStats = async (req, res) => {
+// @desc    Get neighborhood statistics
+// @route   GET /api/gamification/neighborhood-stats
+// @access  Public
+const getNeighborhoodStats = async (req, res) => {
   try {
-    const userId = req.params.userId || req.user._id;
+    const { pincode, timeframe = 'all' } = req.query;
+
+    if (!pincode) {
+      return res.status(400).json({ message: 'Pincode is required' });
+    }
+
+    let dateFilter = {};
+    if (timeframe === 'week') {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      dateFilter = { createdAt: { $gte: weekAgo } };
+    } else if (timeframe === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      dateFilter = { createdAt: { $gte: monthAgo } };
+    }
+
+    // Neighborhood-specific statistics
+    const [
+      issuesInArea,
+      resolvedInArea,
+      issuesByCategory,
+      activeResidents
+    ] = await Promise.all([
+      Issue.countDocuments({ 'location.pincode': pincode, ...dateFilter }),
+      Issue.countDocuments({ 'location.pincode': pincode, status: 'resolved', ...dateFilter }),
+      Issue.aggregate([
+        { $match: { 'location.pincode': pincode, ...dateFilter } },
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      User.countDocuments({ pincode, role: 'user' })
+    ]);
+
+    const neighborhoodResolutionRate = issuesInArea > 0
+      ? ((resolvedInArea / issuesInArea) * 100).toFixed(1)
+      : 0;
+
+    res.json({
+      pincode,
+      stats: {
+        issuesReported: issuesInArea,
+        issuesResolved: resolvedInArea,
+        resolutionRate: parseFloat(neighborhoodResolutionRate),
+        activeResidents,
+      },
+      issuesByCategory,
+      timeframe
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get personal contribution history
+// @route   GET /api/gamification/personal-contributions
+// @access  Private
+const getPersonalContributions = async (req, res) => {
+  try {
+    const userId = req.user._id;
 
     const user = await User.findById(userId);
 
@@ -122,38 +139,61 @@ const getUserStats = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Execute all queries in parallel for better performance
-    const [totalIssues, resolvedIssues, pendingIssues, upvoteAggregation] = await Promise.all([
-      Issue.countDocuments({ reportedBy: userId }),
-      Issue.countDocuments({
-        reportedBy: userId,
-        status: 'resolved',
-      }),
-      Issue.countDocuments({
-        reportedBy: userId,
-        status: { $in: ['pending', 'verified', 'assigned', 'in-progress'] },
-      }),
-      // Use aggregation to calculate total upvotes in a single query
-      Issue.aggregate([
-        { $match: { reportedBy: userId } },
-        { $group: { _id: null, totalUpvotes: { $sum: '$upvoteCount' } } },
-      ]),
-    ]);
-
-    const totalUpvotes = upvoteAggregation.length > 0 ? upvoteAggregation[0].totalUpvotes : 0;
-
-    res.json({
-      civicCredits: user.civicCredits,
-      badges: user.badges,
-      totalIssues,
+    // Personal contribution statistics
+    const [
+      totalReported,
       resolvedIssues,
       pendingIssues,
-      totalUpvotes,
+      verifiedIssues,
+      recentIssues,
+      contributionTimeline
+    ] = await Promise.all([
+      Issue.countDocuments({ reportedBy: userId }),
+      Issue.countDocuments({ reportedBy: userId, status: 'resolved' }),
+      Issue.countDocuments({ reportedBy: userId, status: { $in: ['pending', 'verified', 'assigned', 'in-progress'] } }),
+      Issue.countDocuments({ reportedBy: userId, status: { $in: ['verified', 'assigned', 'in-progress', 'resolved'] } }),
+      Issue.find({ reportedBy: userId })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('title category status createdAt resolvedAt location'),
+      Issue.aggregate([
+        { $match: { reportedBy: userId } },
+        {
+          $group: {
+            _id: { 
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': -1, '_id.month': -1 } },
+        { $limit: 12 }
+      ])
+    ]);
+
+    // Calculate community impact
+    const communityImpactScore = (resolvedIssues * 10) + (verifiedIssues * 5) + totalReported;
+
+    res.json({
+      personalStats: {
+        civicAppreciationPoints: user.civicCredits,
+        totalIssuesReported: totalReported,
+        issuesResolved: resolvedIssues,
+        issuesPending: pendingIssues,
+        issuesVerified: verifiedIssues,
+        communityImpactScore,
+      },
+      recentContributions: recentIssues,
+      contributionTimeline,
+      memberSince: user.createdAt,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 // @desc    Claim reward
 // @route   POST /api/gamification/claim-reward
@@ -198,8 +238,8 @@ const claimReward = async (req, res) => {
 };
 
 module.exports = {
-  getLeaderboard,
-  getBadges,
-  getUserStats,
+  getCommunityDashboard,
+  getNeighborhoodStats,
+  getPersonalContributions,
   claimReward,
 };

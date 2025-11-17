@@ -105,9 +105,7 @@ const getIssues = async (req, res) => {
       category,
       priority,
       department,
-      latitude,
-      longitude,
-      radius,
+      pincode,
       page = 1,
       limit = 20,
     } = req.query;
@@ -136,17 +134,9 @@ const getIssues = async (req, res) => {
     if (priority) query.priority = priority;
     if (department) query.department = department;
 
-    // Geospatial query
-    if (latitude && longitude && radius) {
-      query.location = {
-        $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
-          },
-          $maxDistance: parseFloat(radius) * 1000, // Convert km to meters
-        },
-      };
+    // Filter by pincode (for neighborhood/area-based searches)
+    if (pincode) {
+      query['location.pincode'] = pincode;
     }
 
     // Pagination
@@ -420,50 +410,6 @@ const getAnalytics = async (req, res) => {
   }
 };
 
-// @desc    Get issue hotspots
-// @route   GET /api/issues/analytics/hotspots
-// @access  Public
-const getHotspots = async (req, res) => {
-  try {
-    const { latitude, longitude, radius = 10 } = req.query;
-
-    if (!latitude || !longitude) {
-      return res.status(400).json({ message: 'Latitude and longitude are required' });
-    }
-
-    const hotspots = await Issue.aggregate([
-      {
-        $geoNear: {
-          near: {
-            type: 'Point',
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
-          },
-          distanceField: 'distance',
-          maxDistance: parseFloat(radius) * 1000,
-          spherical: true,
-        },
-      },
-      {
-        $group: {
-          _id: {
-            category: '$category',
-            location: '$location.address',
-          },
-          count: { $sum: 1 },
-          issues: { $push: '$_id' },
-        },
-      },
-      {
-        $sort: { count: -1 },
-      },
-    ]);
-
-    res.json(hotspots);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 module.exports = {
   createIssue,
   getIssues,
@@ -473,5 +419,4 @@ module.exports = {
   updateIssueStatus,
   addComment,
   getAnalytics,
-  getHotspots,
 };

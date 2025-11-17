@@ -9,7 +9,6 @@ const {
   updateIssueStatus,
   addComment,
   getAnalytics,
-  getHotspots,
 } = require('../controllers/issueController');
 const { protect, authorize } = require('../middleware/auth');
 const validate = require('../middleware/validator');
@@ -18,7 +17,6 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getIssues);
-router.get('/analytics/hotspots', getHotspots);
 router.get('/:id', getIssue);
 
 // Protected routes
