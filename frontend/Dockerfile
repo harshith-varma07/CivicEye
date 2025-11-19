@@ -1,4 +1,4 @@
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 
 WORKDIR /app
 
@@ -12,9 +12,9 @@ ENV REACT_APP_AI_URL=$REACT_APP_AI_URL
 
 COPY package*.json ./
 
-# Install dependencies with fallback
-RUN npm install --legacy-peer-deps --maxsockets=1 --prefer-offline || \
-    (rm -rf node_modules package-lock.json && npm install --legacy-peer-deps --maxsockets=1)
+# Clean install
+RUN rm -f package-lock.json && \
+    npm install --legacy-peer-deps
 
 COPY . .
 
