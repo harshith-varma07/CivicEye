@@ -215,12 +215,20 @@ const upvoteIssue = async (req, res) => {
       // Add upvote
       issue.upvotes.push({ user: req.user._id });
 
+      // Award 5 credits to the issue reporter for receiving an upvote
+      const reporter = await User.findById(issue.reportedBy);
+      if (reporter && reporter.role === 'user') {
+        await User.findByIdAndUpdate(issue.reportedBy, {
+          $inc: { civicCredits: 5 },
+        });
+      }
+
       // Notify issue reporter
       if (issue.reportedBy.toString() !== userIdStr) {
         await sendNotification(
           issue.reportedBy,
           'Issue Upvoted',
-          `${req.user.name} upvoted your issue: ${issue.title}`,
+          `${req.user.name} upvoted your issue: ${issue.title}. You earned 5 CivicCredits!`,
           'upvote',
           { issueId: issue._id }
         );
@@ -298,25 +306,30 @@ const updateIssueStatus = async (req, res) => {
     issue.status = status;
 
     if (status === 'resolved') {
+      // Only award credits if issue wasn't already resolved
+      const wasNotResolved = previousStatus !== 'resolved';
+      
       issue.resolvedAt = new Date();
       issue.resolutionNotes = resolutionNotes;
       issue.resolutionMedia = resolutionMedia || [];
 
-      // Award credits ONLY if issue was verified before resolution AND reporter is a user
-      if (previousStatus === 'verified' && issue.reportedBy.role === 'user') {
+      // Award 100 credits to the issue reporter when resolved (only once)
+      if (wasNotResolved && issue.reportedBy.role === 'user') {
         await User.findByIdAndUpdate(issue.reportedBy._id, {
-          $inc: { civicCredits: 50 },
+          $inc: { civicCredits: 100 },
         });
       }
 
       // Send notification to reporter
-      await sendNotification(
-        issue.reportedBy._id,
-        'Issue Resolved',
-        `Your issue has been resolved: ${issue.title}`,
-        'resolution',
-        { issueId: issue._id }
-      );
+      if (wasNotResolved) {
+        await sendNotification(
+          issue.reportedBy._id,
+          'Issue Resolved',
+          `Your issue has been resolved: ${issue.title}. You earned 100 CivicCredits!`,
+          'resolution',
+          { issueId: issue._id }
+        );
+      }
     }
 
     await issue.save();

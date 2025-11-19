@@ -15,10 +15,22 @@ import {
 } from '@mui/material';
 import { ArrowBack, ThumbUp } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
 import { toast } from 'react-toastify';
 import { issueService } from '../services/issueService';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix Leaflet default marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const IssueDetailsPage = () => {
   const { id } = useParams();

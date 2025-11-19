@@ -32,55 +32,71 @@ const ClaimRewardsPage = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [claiming, setClaiming] = useState(false);
 
-  // Define reward tiers
+  // Define government-based reward tiers (50 credits = ₹1)
   const rewards = [
     {
-      id: 'voucher-50',
-      title: 'Coffee Voucher',
-      description: 'Enjoy a free coffee at participating cafes',
-      cost: 50,
-      icon: '☕',
-      color: '#8B4513',
+      id: 'govt-healthcare-1000',
+      title: 'Healthcare Subsidy',
+      description: 'Get ₹1000 subsidy on medical bills at government hospitals',
+      cost: 50000,
+      icon: '🏥',
+      color: '#2E7D32',
     },
     {
-      id: 'voucher-100',
-      title: 'Food Voucher',
-      description: 'Get ₹100 off at participating restaurants',
-      cost: 100,
-      icon: '🍽️',
-      color: '#FF6347',
+      id: 'govt-education-1500',
+      title: 'Education Grant',
+      description: 'Receive ₹1500 education grant for school/college fees',
+      cost: 75000,
+      icon: '📚',
+      color: '#1976D2',
     },
     {
-      id: 'voucher-200',
-      title: 'Grocery Voucher',
-      description: 'Save ₹200 on your next grocery shopping',
-      cost: 200,
-      icon: '🛒',
-      color: '#32CD32',
+      id: 'govt-transport-1200',
+      title: 'Public Transport Pass',
+      description: '₹1200 value monthly pass for buses and metro',
+      cost: 60000,
+      icon: '🚌',
+      color: '#F57C00',
     },
     {
-      id: 'voucher-500',
-      title: 'Shopping Voucher',
-      description: 'Get ₹500 voucher for online shopping',
-      cost: 500,
-      icon: '🛍️',
-      color: '#FF1493',
+      id: 'govt-ration-2000',
+      title: 'Ration Card Benefit',
+      description: '₹2000 subsidy on essential commodities via PDS',
+      cost: 100000,
+      icon: '🌾',
+      color: '#7B1FA2',
     },
     {
-      id: 'voucher-1000',
-      title: 'Premium Gift Card',
-      description: '₹1000 gift card for premium stores',
-      cost: 1000,
-      icon: '🎁',
-      color: '#FFD700',
+      id: 'govt-electricity-1800',
+      title: 'Electricity Bill Waiver',
+      description: 'Get ₹1800 discount on your electricity bill',
+      cost: 90000,
+      icon: '⚡',
+      color: '#C62828',
     },
     {
-      id: 'voucher-2000',
-      title: 'Travel Voucher',
-      description: 'Get ₹2000 off on flight or hotel bookings',
-      cost: 2000,
-      icon: '✈️',
-      color: '#4169E1',
+      id: 'govt-water-1300',
+      title: 'Water Bill Subsidy',
+      description: '₹1300 subsidy on municipal water charges',
+      cost: 65000,
+      icon: '💧',
+      color: '#0288D1',
+    },
+    {
+      id: 'govt-housing-3000',
+      title: 'Housing Scheme Benefit',
+      description: '₹3000 assistance under government housing program',
+      cost: 150000,
+      icon: '🏠',
+      color: '#5D4037',
+    },
+    {
+      id: 'govt-skill-2500',
+      title: 'Skill Development Voucher',
+      description: '₹2500 voucher for government skill training programs',
+      cost: 125000,
+      icon: '👨‍💼',
+      color: '#00796B',
     },
   ];
 
@@ -159,7 +175,8 @@ const ClaimRewardsPage = () => {
           </Typography>
           <Alert severity="info" sx={{ mb: 3 }}>
             💡 <strong>How to earn points:</strong> Report issues, get them verified by the community, 
-            and receive <strong>50 Appreciation Points</strong> when your issue is fully resolved!
+            and receive <strong>100 Appreciation Points</strong> when your issue is fully resolved!
+            and <strong>5 Points</strong> for every upvote your reported issues receive.
           </Alert>
         </Box>
 

@@ -1,5 +1,7 @@
 const User = require('../models/User');
+const ProfileUpdateRequest = require('../models/ProfileUpdateRequest');
 const generateToken = require('../utils/generateToken');
+const { sendNotification } = require('../utils/notification');
 
 // @desc    Register new user (Citizen)
 // @route   POST /api/auth/register
@@ -123,9 +125,18 @@ const getMe = async (req, res) => {
 
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
-// @access  Private
+// @access  Private (Admin only for direct updates)
 const updateProfile = async (req, res) => {
   try {
+    // Only admins can update profiles directly
+    if (req.user.role === 'officer') {
+      return res.status(403).json({ message: 'Officers cannot update their own profiles. Please contact admin.' });
+    }
+
+    if (req.user.role === 'user') {
+      return res.status(403).json({ message: 'Citizens must submit profile update requests for admin approval.' });
+    }
+
     const user = await User.findById(req.user._id);
 
     if (user) {
@@ -157,9 +168,85 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// @desc    Request profile update (for citizens - requires admin approval)
+// @route   POST /api/auth/request-profile-update
+// @access  Private (User only)
+const requestProfileUpdate = async (req, res) => {
+  try {
+    if (req.user.role !== 'user') {
+      return res.status(403).json({ message: 'Only citizens can submit profile update requests' });
+    }
+
+    // Check if there's already a pending request
+    const existingRequest = await ProfileUpdateRequest.findOne({
+      user: req.user._id,
+      status: 'pending',
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ message: 'You already have a pending profile update request' });
+    }
+
+    // Create new profile update request (name and aadhar cannot be changed)
+    const updateRequest = await ProfileUpdateRequest.create({
+      user: req.user._id,
+      requestedChanges: {
+        phone: req.body.phone,
+        address: req.body.address,
+        pincode: req.body.pincode,
+      },
+    });
+
+    // Notify all admins
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      await sendNotification(
+        admin._id,
+        'Profile Update Request',
+        `${req.user.name} has requested to update their profile`,
+        'profile_update_request',
+        { requestId: updateRequest._id }
+      );
+    }
+
+    res.status(201).json({
+      message: 'Profile update request submitted successfully',
+      requestId: updateRequest._id,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get profile update request status
+// @route   GET /api/auth/profile-update-status
+// @access  Private (User only)
+const getProfileUpdateStatus = async (req, res) => {
+  try {
+    const pendingRequest = await ProfileUpdateRequest.findOne({
+      user: req.user._id,
+      status: 'pending',
+    });
+
+    if (pendingRequest) {
+      return res.json({
+        hasPendingRequest: true,
+        pendingChanges: pendingRequest.requestedChanges,
+        submittedAt: pendingRequest.createdAt,
+      });
+    }
+
+    res.json({ hasPendingRequest: false });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
   getMe,
   updateProfile,
+  requestProfileUpdate,
+  getProfileUpdateStatus,
 };

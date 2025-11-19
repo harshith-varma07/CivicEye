@@ -13,23 +13,43 @@ import {
   Grid,
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { toast } from 'react-toastify';
 import { issueService } from '../services/issueService';
 import { uploadService } from '../services/uploadService';
 import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-const LocationPicker = ({ onLocationSelect }) => {
-  const [position, setPosition] = useState(null);
+// Fix Leaflet default marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
+// Component to update map center when coordinates change
+const MapUpdater = ({ center, zoom }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (center && center[0] !== 0 && center[1] !== 0) {
+      map.setView(center, zoom);
+    }
+  }, [center, zoom, map]);
+  return null;
+};
+
+const LocationPicker = ({ onLocationSelect, position }) => {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
       onLocationSelect(e.latlng);
     },
   });
 
-  return position ? <Marker position={position} /> : null;
+  return position && position.lat !== 0 && position.lng !== 0 ? <Marker position={position} /> : null;
 };
 
 const ReportIssuePage = () => {
@@ -48,21 +68,60 @@ const ReportIssuePage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [mapCenter, setMapCenter] = useState([20.5937, 78.9629]); // Default India center
+  const [mapZoom, setMapZoom] = useState(5);
+  const [markerPosition, setMarkerPosition] = useState(null);
 
   useEffect(() => {
     // Get user's current location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
         setFormData(prev => ({
           ...prev,
           location: {
             ...prev.location,
-            coordinates: [position.coords.longitude, position.coords.latitude],
+            coordinates: [lng, lat],
           },
         }));
+        setMapCenter([lat, lng]);
+        setMapZoom(13);
+        setMarkerPosition({ lat, lng });
       });
     }
   }, []);
+
+  // Geocode pincode to get coordinates
+  const geocodePincode = async (pincode) => {
+    if (pincode.length === 6) {
+      try {
+        // Using Nominatim API for geocoding
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?postalcode=${pincode}&country=India&format=json&limit=1`
+        );
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lon = parseFloat(data[0].lon);
+          setMapCenter([lat, lon]);
+          setMapZoom(13);
+          // Update coordinates in form data
+          setFormData(prev => ({
+            ...prev,
+            location: {
+              ...prev.location,
+              coordinates: [lon, lat],
+            },
+          }));
+          setMarkerPosition({ lat, lng: lon });
+          toast.success('Map centered to pincode area');
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+      }
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,6 +158,7 @@ const ReportIssuePage = () => {
         coordinates: [latlng.lng, latlng.lat],
       },
     }));
+    setMarkerPosition(latlng);
   };
 
   const handleFileUpload = async (e) => {
@@ -125,7 +185,7 @@ const ReportIssuePage = () => {
     e.preventDefault();
     
     if (!formData.location.address) {
-      toast.error('Please provide an address');
+      toast.error('Please provide an address of where the issue is located');
       return;
     }
 
@@ -268,30 +328,39 @@ const ReportIssuePage = () => {
                   label="Pincode"
                   name="pincode"
                   value={formData.location.pincode}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, pincode: e.target.value },
-                  }))}
+                  onChange={(e) => {
+                    const newPincode = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { ...prev.location, pincode: newPincode },
+                    }));
+                    // Geocode when pincode is complete
+                    if (newPincode.length === 6) {
+                      geocodePincode(newPincode);
+                    }
+                  }}
                   required
                   inputProps={{ maxLength: 6 }}
+                  helperText="Map will center to this pincode"
                 />
               </Grid>
 
               <Grid item xs={12}>
                 <Typography variant="subtitle1" gutterBottom>
-                  Click on map to select location
+                  Click on map to select exact location
                 </Typography>
                 <Box sx={{ height: 400, width: '100%' }}>
                   <MapContainer
-                    center={[formData.location.coordinates[1] || 0, formData.location.coordinates[0] || 0]}
-                    zoom={13}
+                    center={mapCenter}
+                    zoom={mapZoom}
                     style={{ height: '100%', width: '100%' }}
                   >
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                     />
-                    <LocationPicker onLocationSelect={handleLocationSelect} />
+                    <MapUpdater center={mapCenter} zoom={mapZoom} />
+                    <LocationPicker onLocationSelect={handleLocationSelect} position={markerPosition} />
                   </MapContainer>
                 </Box>
               </Grid>

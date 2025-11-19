@@ -68,4 +68,9 @@ router.delete('/delete-user/:id', deleteUser);
 // Statistics
 router.get('/stats', getAdminStats);
 
+// Profile update requests
+router.get('/profile-update-requests', require('../controllers/adminController').getProfileUpdateRequests);
+router.put('/approve-profile-update/:id', require('../controllers/adminController').approveProfileUpdate);
+router.put('/reject-profile-update/:id', require('../controllers/adminController').rejectProfileUpdate);
+
 module.exports = router;

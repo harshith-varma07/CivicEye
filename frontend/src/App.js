@@ -16,6 +16,7 @@ import CommunityDashboardPage from './pages/CommunityDashboardPage';
 import AuthorityDashboard from './pages/AuthorityDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ClaimRewardsPage from './pages/ClaimRewardsPage';
+import ProfilePage from './pages/ProfilePage';
 
 const theme = createTheme({
   palette: {
@@ -124,6 +125,7 @@ function App() {
             <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
             <Route path="/register" element={<AuthRoute><RegisterPage /></AuthRoute>} />
             <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
             <Route path="/report" element={<PrivateRoute><ReportIssuePage /></PrivateRoute>} />
             <Route path="/issues/:id" element={<IssueDetailsPage />} />
             <Route path="/community-dashboard" element={<CommunityDashboardPage />} />

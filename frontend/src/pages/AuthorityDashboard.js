@@ -22,9 +22,23 @@ import {
   MenuItem,
 } from '@mui/material';
 import { Logout, Refresh } from '@mui/icons-material';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { issueService } from '../services/issueService';
+import 'leaflet/dist/leaflet.css';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix Leaflet default marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const AuthorityDashboard = () => {
   const navigate = useNavigate();
@@ -263,7 +277,7 @@ const AuthorityDashboard = () => {
       <Dialog
         open={openStatusDialog}
         onClose={() => setOpenStatusDialog(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>Update Issue Status</DialogTitle>
@@ -271,6 +285,27 @@ const AuthorityDashboard = () => {
           <Typography variant="subtitle2" gutterBottom>
             {selectedIssue?.title}
           </Typography>
+          
+          {/* Map showing issue location */}
+          {selectedIssue && selectedIssue.location && (
+            <Box sx={{ height: 300, width: '100%', mb: 2, mt: 2 }}>
+              <MapContainer
+                center={[selectedIssue.location.coordinates[1], selectedIssue.location.coordinates[0]]}
+                zoom={15}
+                style={{ height: '100%', width: '100%' }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                />
+                <Marker position={[selectedIssue.location.coordinates[1], selectedIssue.location.coordinates[0]]} />
+              </MapContainer>
+              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                Location: {selectedIssue.location.address}
+              </Typography>
+            </Box>
+          )}
+          
           <TextField
             fullWidth
             select

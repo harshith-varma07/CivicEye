@@ -39,7 +39,8 @@ const AdminDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [stats, setStats] = useState({});
+  const [profileUpdateRequests, setProfileUpdateRequests] = useState([]);
+  const [stats, setStats] = useState(null);
   // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
   const [openOfficerDialog, setOpenOfficerDialog] = useState(false);
@@ -74,14 +75,16 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [pendingRes, usersRes, statsRes] = await Promise.all([
-        api.get('/admin/pending-users'),
-        api.get('/admin/users'),
-        api.get('/admin/stats'),
+      const [pendingRes, usersRes, statsRes, profileReqRes] = await Promise.all([
+        api.get('/api/admin/pending-users'),
+        api.get('/api/admin/users'),
+        api.get('/api/admin/stats'),
+        api.get('/api/admin/profile-update-requests'),
       ]);
       setPendingUsers(pendingRes.data);
       setAllUsers(usersRes.data);
       setStats(statsRes.data);
+      setProfileUpdateRequests(profileReqRes.data);
     } catch (error) {
       toast.error('Failed to fetch data');
     } finally {
@@ -159,6 +162,27 @@ const AdminDashboard = () => {
     { value: 'traffic', label: 'Traffic Management' },
     { value: 'general', label: 'General' },
   ];
+
+  const handleApproveProfileUpdate = async (requestId) => {
+    try {
+      await api.put(`/api/admin/approve-profile-update/${requestId}`);
+      toast.success('Profile update approved successfully');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve profile update');
+    }
+  };
+
+  const handleRejectProfileUpdate = async (requestId) => {
+    const reason = prompt('Enter rejection reason (optional):');
+    try {
+      await api.put(`/api/admin/reject-profile-update/${requestId}`, { reason });
+      toast.success('Profile update rejected');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reject profile update');
+    }
+  };
 
   return (
     <>
@@ -242,10 +266,11 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Paper>
-          <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
+          <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
             <Tab label="Pending Users" />
             <Tab label="All Users" />
             <Tab label="Officers" />
+            <Tab label="Profile Update Requests" />
           </Tabs>
 
           {/* Pending Users Tab */}
@@ -373,6 +398,82 @@ const AdminDashboard = () => {
                         <TableCell>{officer.phone}</TableCell>
                       </TableRow>
                     ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          {/* Profile Update Requests Tab */}
+          {tabValue === 3 && (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>User Name</TableCell>
+                    <TableCell>Aadhar Number</TableCell>
+                    <TableCell>Requested Changes</TableCell>
+                    <TableCell>Requested On</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {profileUpdateRequests.map((request) => (
+                    <TableRow key={request._id}>
+                      <TableCell>{request.user?.name}</TableCell>
+                      <TableCell>{request.user?.aadharNumber}</TableCell>
+                      <TableCell>
+                        <Box>
+                          {request.requestedChanges.phone && request.requestedChanges.phone !== request.user?.phone && (
+                            <Typography variant="caption" display="block">
+                              Phone: {request.user?.phone || 'N/A'} → <strong>{request.requestedChanges.phone}</strong>
+                            </Typography>
+                          )}
+                          {request.requestedChanges.address && request.requestedChanges.address !== request.user?.address && (
+                            <Typography variant="caption" display="block">
+                              Address: {request.user?.address || 'N/A'} → <strong>{request.requestedChanges.address}</strong>
+                            </Typography>
+                          )}
+                          {request.requestedChanges.pincode && request.requestedChanges.pincode !== request.user?.pincode && (
+                            <Typography variant="caption" display="block">
+                              Pincode: {request.user?.pincode || 'N/A'} → <strong>{request.requestedChanges.pincode}</strong>
+                            </Typography>
+                          )}
+                          {!request.requestedChanges.phone && !request.requestedChanges.address && !request.requestedChanges.pincode && (
+                            <Typography variant="caption" color="text.secondary">
+                              No changes
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          onClick={() => handleApproveProfileUpdate(request._id)}
+                          sx={{ mr: 1 }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleRejectProfileUpdate(request._id)}
+                        >
+                          Reject
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {profileUpdateRequests.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        No pending profile update requests
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const ProfileUpdateRequest = require('../models/ProfileUpdateRequest');
 const { sendNotification } = require('../utils/notification');
 
 // @desc    Get all pending user registrations
@@ -326,4 +327,103 @@ module.exports = {
   updateUser,
   deleteUser,
   getAdminStats,
+  getProfileUpdateRequests,
+  approveProfileUpdate,
+  rejectProfileUpdate,
+};
+
+// @desc    Get all profile update requests
+// @route   GET /api/admin/profile-update-requests
+// @access  Private (Admin only)
+const getProfileUpdateRequests = async (req, res) => {
+  try {
+    const requests = await ProfileUpdateRequest.find({ status: 'pending' })
+      .populate('user', 'name aadharNumber phone address pincode')
+      .sort({ createdAt: -1 });
+    
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Approve profile update request
+// @route   PUT /api/admin/approve-profile-update/:id
+// @access  Private (Admin only)
+const approveProfileUpdate = async (req, res) => {
+  try {
+    const request = await ProfileUpdateRequest.findById(req.params.id).populate('user');
+    
+    if (!request) {
+      return res.status(404).json({ message: 'Profile update request not found' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ message: 'This request has already been processed' });
+    }
+
+    // Update user profile (name and aadhar are not allowed to change for citizens)
+    const user = await User.findById(request.user._id);
+    if (request.requestedChanges.phone) user.phone = request.requestedChanges.phone;
+    if (request.requestedChanges.address) user.address = request.requestedChanges.address;
+    if (request.requestedChanges.pincode) user.pincode = request.requestedChanges.pincode;
+    await user.save();
+
+    // Update request status
+    request.status = 'approved';
+    request.reviewedBy = req.user._id;
+    request.reviewedAt = new Date();
+    await request.save();
+
+    // Notify user
+    await sendNotification(
+      request.user._id,
+      'Profile Updated',
+      'Your profile update request has been approved',
+      'profile_update_approved',
+      { requestId: request._id }
+    );
+
+    res.json({ message: 'Profile update approved successfully', request });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Reject profile update request
+// @route   PUT /api/admin/reject-profile-update/:id
+// @access  Private (Admin only)
+const rejectProfileUpdate = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const request = await ProfileUpdateRequest.findById(req.params.id).populate('user');
+    
+    if (!request) {
+      return res.status(404).json({ message: 'Profile update request not found' });
+    }
+
+    if (request.status !== 'pending') {
+      return res.status(400).json({ message: 'This request has already been processed' });
+    }
+
+    // Update request status
+    request.status = 'rejected';
+    request.rejectionReason = reason;
+    request.reviewedBy = req.user._id;
+    request.reviewedAt = new Date();
+    await request.save();
+
+    // Notify user
+    await sendNotification(
+      request.user._id,
+      'Profile Update Rejected',
+      `Your profile update request was rejected. Reason: ${reason || 'Not specified'}`,
+      'profile_update_rejected',
+      { requestId: request._id }
+    );
+
+    res.json({ message: 'Profile update rejected', request });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

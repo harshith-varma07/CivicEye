@@ -86,7 +86,7 @@ const DashboardPage = () => {
 
   const handleProfile = () => {
     handleMenuClose();
-    // Navigate to profile page if needed
+    navigate('/profile');
   };
 
   const handleClaimRewards = () => {

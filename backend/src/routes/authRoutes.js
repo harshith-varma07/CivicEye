@@ -38,5 +38,7 @@ router.post(
 
 router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
+router.post('/request-profile-update', protect, require('../controllers/authController').requestProfileUpdate);
+router.get('/profile-update-status', protect, require('../controllers/authController').getProfileUpdateStatus);
 
 module.exports = router;
