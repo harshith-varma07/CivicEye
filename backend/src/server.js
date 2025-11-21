@@ -19,6 +19,9 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
+// Trust proxy - required for nginx reverse proxy
+app.set('trust proxy', 1);
+
 // Connect to database
 connectDB();
 

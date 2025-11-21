@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '../utils/dateFormatter';
 import {
   Container,
   Typography,
@@ -230,7 +231,7 @@ const AuthorityDashboard = () => {
                     Pincode: {issue.location?.pincode}
                   </Typography>
                   <Typography variant="caption" display="block">
-                    Reported: {new Date(issue.createdAt).toLocaleDateString()}
+                    Reported: {formatDate(issue.createdAt)}
                   </Typography>
                   <Typography variant="caption" display="block">
                     Upvotes: {issue.upvoteCount || 0}

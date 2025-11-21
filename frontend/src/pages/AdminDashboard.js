@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '../utils/dateFormatter';
 import {
   Container,
   Box,
@@ -40,9 +41,8 @@ const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [profileUpdateRequests, setProfileUpdateRequests] = useState([]);
-  const [stats, setStats] = useState(null);
-  // eslint-disable-next-line no-unused-vars
-  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ pendingUsers: 0, approvedUsers: 0, totalOfficers: 0, totalIssues: 0 });
+  const [loading, setLoading] = useState(true);
   const [openOfficerDialog, setOpenOfficerDialog] = useState(false);
   const [openAdminDialog, setOpenAdminDialog] = useState(false);
   const [openRejectDialog, setOpenRejectDialog] = useState(false);
@@ -64,22 +64,30 @@ const AdminDashboard = () => {
   const [rejectReason, setRejectReason] = useState('');
 
   useEffect(() => {
-    if (user?.role !== 'admin') {
+    // Wait for user to load from AuthContext
+    if (loading && !user) {
+      return;
+    }
+    
+    if (user && user.role !== 'admin') {
       toast.error('Access denied. Admin only.');
       navigate('/dashboard');
       return;
     }
-    fetchData();
+    
+    if (user && user.role === 'admin') {
+      fetchData();
+    }
   }, [user, navigate]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const [pendingRes, usersRes, statsRes, profileReqRes] = await Promise.all([
-        api.get('/api/admin/pending-users'),
-        api.get('/api/admin/users'),
-        api.get('/api/admin/stats'),
-        api.get('/api/admin/profile-update-requests'),
+        api.get('/admin/pending-users'),
+        api.get('/admin/users'),
+        api.get('/admin/stats'),
+        api.get('/admin/profile-update-requests'),
       ]);
       setPendingUsers(pendingRes.data);
       setAllUsers(usersRes.data);
@@ -165,7 +173,7 @@ const AdminDashboard = () => {
 
   const handleApproveProfileUpdate = async (requestId) => {
     try {
-      await api.put(`/api/admin/approve-profile-update/${requestId}`);
+      await api.put(`/admin/approve-profile-update/${requestId}`);
       toast.success('Profile update approved successfully');
       fetchData();
     } catch (error) {
@@ -176,13 +184,22 @@ const AdminDashboard = () => {
   const handleRejectProfileUpdate = async (requestId) => {
     const reason = prompt('Enter rejection reason (optional):');
     try {
-      await api.put(`/api/admin/reject-profile-update/${requestId}`, { reason });
+      await api.put(`/admin/reject-profile-update/${requestId}`, { reason });
       toast.success('Profile update rejected');
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to reject profile update');
     }
   };
+
+  // Show loading state while user is being loaded
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -445,7 +462,7 @@ const AdminDashboard = () => {
                           )}
                         </Box>
                       </TableCell>
-                      <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>{formatDate(request.createdAt)}</TableCell>
                       <TableCell>
                         <Button
                           size="small"

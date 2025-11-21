@@ -19,7 +19,7 @@ import L from 'leaflet';
 import { toast } from 'react-toastify';
 import { issueService } from '../services/issueService';
 import { useAuth } from '../context/AuthContext';
-import { format } from 'date-fns';
+import { formatDateTime } from '../utils/dateFormatter';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -182,7 +182,7 @@ const IssueDetailsPage = () => {
                   </Box>
                   <Typography variant="body2">{comment.text}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {format(new Date(comment.createdAt), 'PPp')}
+                    {formatDateTime(comment.createdAt)}
                   </Typography>
                 </Box>
               ))}

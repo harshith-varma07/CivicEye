@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '../utils/dateFormatter';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -289,7 +290,7 @@ const CommunityDashboardPage = () => {
                               />
                             </TableCell>
                             <TableCell>
-                              {new Date(issue.resolvedAt).toLocaleDateString()}
+                              {formatDate(issue.resolvedAt)}
                             </TableCell>
                           </TableRow>
                         ))}

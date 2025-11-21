@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '../utils/dateFormatter';
 import {
   Container,
   Box,
@@ -234,7 +235,7 @@ const DashboardPage = () => {
                     </Grid>
                     <Box sx={{ mt: 3 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Member since: {new Date(personalContributions.memberSince).toLocaleDateString()}
+                        Member since: {formatDate(personalContributions.memberSince)}
                       </Typography>
                       <LinearProgress
                         variant="determinate"

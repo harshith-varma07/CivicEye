@@ -30,3 +30,4 @@ contracts/coverage/
 .idea/
 .vscode/
 node_modules/
+docker-compose.yml

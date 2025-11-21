@@ -110,7 +110,7 @@ const ClaimRewardsPage = () => {
 
     setClaiming(true);
     try {
-      const response = await api.post('/api/gamification/claim-reward', {
+      const response = await api.post('/gamification/claim-reward', {
         rewardId: selectedReward.id,
         rewardCost: selectedReward.cost,
       });

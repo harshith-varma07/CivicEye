@@ -11,8 +11,15 @@ import {
   AppBar,
   Toolbar,
   Grid,
+  Card,
+  CardMedia,
+  CardActions,
+  IconButton,
+  ImageList,
+  ImageListItem,
+  ImageListItemBar,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Delete, Visibility } from '@mui/icons-material';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { toast } from 'react-toastify';
@@ -179,6 +186,18 @@ const ReportIssuePage = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleRemoveMedia = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      media: prev.media.filter((_, index) => index !== indexToRemove),
+    }));
+    toast.success('Attachment removed');
+  };
+
+  const handlePreviewMedia = (url) => {
+    window.open(url, '_blank');
   };
 
   const handleSubmit = async (e) => {
@@ -371,9 +390,51 @@ const ReportIssuePage = () => {
                   <input type="file" hidden multiple accept="image/*,video/*" onChange={handleFileUpload} />
                 </Button>
                 {formData.media.length > 0 && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    {formData.media.length} file(s) uploaded
-                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      {formData.media.length} file(s) uploaded
+                    </Typography>
+                    <ImageList sx={{ width: '100%', maxHeight: 400 }} cols={3} rowHeight={200}>
+                      {formData.media.map((media, index) => (
+                        <ImageListItem key={index}>
+                          {media.type === 'image' ? (
+                            <img
+                              src={media.url}
+                              alt={`Upload ${index + 1}`}
+                              loading="lazy"
+                              style={{ objectFit: 'cover', height: '100%' }}
+                            />
+                          ) : (
+                            <video
+                              src={media.url}
+                              style={{ objectFit: 'cover', height: '100%' }}
+                            />
+                          )}
+                          <ImageListItemBar
+                            title={media.type === 'image' ? 'Image' : 'Video'}
+                            actionIcon={
+                              <Box>
+                                <IconButton
+                                  sx={{ color: 'rgba(255, 255, 255, 0.8)' }}
+                                  onClick={() => handlePreviewMedia(media.url)}
+                                  title="Preview"
+                                >
+                                  <Visibility />
+                                </IconButton>
+                                <IconButton
+                                  sx={{ color: 'rgba(255, 255, 255, 0.8)' }}
+                                  onClick={() => handleRemoveMedia(index)}
+                                  title="Remove"
+                                >
+                                  <Delete />
+                                </IconButton>
+                              </Box>
+                            }
+                          />
+                        </ImageListItem>
+                      ))}
+                    </ImageList>
+                  </Box>
                 )}
               </Grid>
 

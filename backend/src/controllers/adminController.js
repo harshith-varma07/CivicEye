@@ -317,21 +317,6 @@ const getAdminStats = async (req, res) => {
   }
 };
 
-module.exports = {
-  getPendingUsers,
-  getAllUsers,
-  approveUser,
-  rejectUser,
-  createOfficer,
-  createAdmin,
-  updateUser,
-  deleteUser,
-  getAdminStats,
-  getProfileUpdateRequests,
-  approveProfileUpdate,
-  rejectProfileUpdate,
-};
-
 // @desc    Get all profile update requests
 // @route   GET /api/admin/profile-update-requests
 // @access  Private (Admin only)
@@ -426,4 +411,19 @@ const rejectProfileUpdate = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+module.exports = {
+  getPendingUsers,
+  getAllUsers,
+  approveUser,
+  rejectUser,
+  createOfficer,
+  createAdmin,
+  updateUser,
+  deleteUser,
+  getAdminStats,
+  getProfileUpdateRequests,
+  approveProfileUpdate,
+  rejectProfileUpdate,
 };

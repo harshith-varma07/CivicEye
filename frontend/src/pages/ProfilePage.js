@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '../utils/dateFormatter';
 import {
   Container,
   Box,
@@ -44,7 +45,7 @@ const ProfilePage = () => {
 
   const loadProfile = async () => {
     try {
-      const response = await api.get('/api/auth/me');
+      const response = await api.get('/auth/me');
       setProfileData({
         name: response.data.name || '',
         phone: response.data.phone || '',
@@ -55,7 +56,7 @@ const ProfilePage = () => {
       // Check for pending profile update requests
       if (user?.role === 'user') {
         try {
-          const pendingResponse = await api.get('/api/auth/profile-update-status');
+          const pendingResponse = await api.get('/auth/profile-update-status');
           if (pendingResponse.data.hasPendingRequest) {
             setPendingChanges(pendingResponse.data.pendingChanges);
           }
@@ -85,12 +86,12 @@ const ProfilePage = () => {
           address: profileData.address,
           pincode: profileData.pincode,
         };
-        await api.post('/api/auth/request-profile-update', updateData);
+        await api.post('/auth/request-profile-update', updateData);
         toast.success('Profile update request submitted. Waiting for admin approval.');
         setPendingChanges(updateData);
       } else if (user?.role === 'admin') {
         // Only admins can update directly
-        const response = await api.put('/api/auth/profile', profileData);
+        const response = await api.put('/auth/profile', profileData);
         setUser({ ...user, ...response.data });
         toast.success('Profile updated successfully');
       }
@@ -348,7 +349,7 @@ const ProfilePage = () => {
           <Divider sx={{ my: 3 }} />
           
           <Typography variant="body2" color="text.secondary">
-            <strong>Account Created:</strong> {new Date(user?.createdAt).toLocaleDateString()}
+            <strong>Account Created:</strong> {formatDate(user?.createdAt)}
           </Typography>
         </Paper>
       </Container>
