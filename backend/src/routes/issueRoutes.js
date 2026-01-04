@@ -15,9 +15,31 @@ const validate = require('../middleware/validator');
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getIssues);
-router.get('/:id', getIssue);
+// Optional authentication middleware - allows both authenticated and unauthenticated access
+// but provides user info if authenticated for proper filtering
+const optionalProtect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      const jwt = require('jsonwebtoken');
+      const User = require('../models/User');
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+    } catch (error) {
+      // Token invalid, continue without user
+    }
+  }
+  next();
+};
+
+// Routes with optional authentication for proper filtering
+// Officers see only their department + pincode issues
+// Users see only their pincode issues
+// Unauthenticated users see all issues
+router.get('/', optionalProtect, getIssues);
+router.get('/:id', optionalProtect, getIssue);
 
 // Protected routes
 router.post(

@@ -120,8 +120,62 @@ const IssueDetailsPage = () => {
               <Box sx={{ mb: 2 }}>
                 <Chip label={issue.category} sx={{ mr: 1 }} />
                 <Chip label={issue.status} color="primary" sx={{ mr: 1 }} />
-                <Chip label={issue.priority} color="secondary" />
+                <Chip 
+                  label={issue.priority} 
+                  color={
+                    issue.priority === 'critical' ? 'error' : 
+                    issue.priority === 'high' ? 'warning' : 
+                    issue.priority === 'medium' ? 'info' : 'default'
+                  } 
+                />
               </Box>
+
+              {/* AI Analysis Section */}
+              {issue.aiPrediction && (
+                <Paper sx={{ p: 2, mb: 2, bgcolor: 'grey.50' }}>
+                  <Typography variant="subtitle2" color="primary" gutterBottom>
+                    AI Analysis
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {issue.aiPrediction.priority && (
+                      <Chip 
+                        size="small" 
+                        label={`AI Priority: ${issue.aiPrediction.priority}`}
+                        color={
+                          issue.aiPrediction.priority === 'critical' ? 'error' : 
+                          issue.aiPrediction.priority === 'high' ? 'warning' : 'default'
+                        }
+                      />
+                    )}
+                    {issue.aiPrediction.priorityScore && (
+                      <Chip 
+                        size="small" 
+                        label={`Score: ${(issue.aiPrediction.priorityScore * 100).toFixed(0)}%`}
+                        variant="outlined"
+                      />
+                    )}
+                    {issue.aiPrediction.isDuplicate && (
+                      <Chip 
+                        size="small" 
+                        label={`Potential Duplicate (${(issue.aiPrediction.similarity * 100).toFixed(0)}% match)`}
+                        color="warning"
+                      />
+                    )}
+                  </Box>
+                </Paper>
+              )}
+
+              {/* Tags Section */}
+              {issue.tags && issue.tags.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>Tags</Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {issue.tags.map((tag, index) => (
+                      <Chip key={index} size="small" label={tag} variant="outlined" />
+                    ))}
+                  </Box>
+                </Box>
+              )}
 
               <Typography variant="body1" paragraph>
                 {issue.description}

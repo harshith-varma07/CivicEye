@@ -56,10 +56,19 @@ const createIssue = async (req, res) => {
             confidence: aiResponse.data.confidence,
             isDuplicate: aiResponse.data.isDuplicate,
             duplicateOf: aiResponse.data.duplicateOf,
+            similarity: aiResponse.data.similarity,
+            priority: aiResponse.data.priority,
+            priorityScore: aiResponse.data.priorityScore,
             estimatedResolutionTime: aiResponse.data.estimatedResolutionTime,
             predictedAt: new Date(),
           };
           issue.tags = aiResponse.data.tags || [];
+          
+          // Update issue priority with AI prediction
+          if (aiResponse.data.priority) {
+            issue.priority = aiResponse.data.priority;
+          }
+          
           await issue.save();
         }
       } catch (aiError) {
@@ -122,8 +131,20 @@ const getIssues = async (req, res) => {
     const query = {};
 
     // Filter by officer's department and pincode if user is an officer
+    // Officers can ONLY see issues in their department AND their pincode
     if (req.user && req.user.role === 'officer') {
+      if (!req.user.department) {
+        return res.status(403).json({ message: 'Officer must have a department assigned' });
+      }
+      if (!req.user.pincode) {
+        return res.status(403).json({ message: 'Officer must have a pincode assigned' });
+      }
       query.department = req.user.department;
+      query['location.pincode'] = req.user.pincode;
+    }
+
+    // Filter by pincode for regular users (citizens)
+    if (req.user && req.user.role === 'user') {
       if (req.user.pincode) {
         query['location.pincode'] = req.user.pincode;
       }
@@ -135,7 +156,8 @@ const getIssues = async (req, res) => {
     if (department) query.department = department;
 
     // Filter by pincode (for neighborhood/area-based searches)
-    if (pincode) {
+    // Only apply this filter if not already filtered by user's pincode
+    if (pincode && !(req.user && (req.user.role === 'officer' || req.user.role === 'user'))) {
       query['location.pincode'] = pincode;
     }
 
@@ -183,6 +205,29 @@ const getIssue = async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
+    // Check if user has access to this issue based on pincode
+    if (req.user) {
+      // Officers can only view issues in their department AND pincode
+      if (req.user.role === 'officer') {
+        if (!req.user.department || !req.user.pincode) {
+          return res.status(403).json({ message: 'Officer must have department and pincode assigned' });
+        }
+        if (issue.department !== req.user.department) {
+          return res.status(403).json({ message: 'Access denied. This issue is not in your department.' });
+        }
+        if (issue.location.pincode !== req.user.pincode) {
+          return res.status(403).json({ message: 'Access denied. This issue is not in your pincode area.' });
+        }
+      }
+      
+      // Regular users can only view issues in their pincode
+      if (req.user.role === 'user') {
+        if (req.user.pincode && issue.location.pincode !== req.user.pincode) {
+          return res.status(403).json({ message: 'Access denied. This issue is not in your area.' });
+        }
+      }
+    }
+
     res.json(issue);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -198,6 +243,25 @@ const upvoteIssue = async (req, res) => {
 
     if (!issue) {
       return res.status(404).json({ message: 'Issue not found' });
+    }
+
+    // Check if user has access to this issue based on pincode
+    if (req.user.role === 'officer') {
+      if (!req.user.department || !req.user.pincode) {
+        return res.status(403).json({ message: 'Officer must have department and pincode assigned' });
+      }
+      if (issue.department !== req.user.department) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your department.' });
+      }
+      if (issue.location.pincode !== req.user.pincode) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your pincode area.' });
+      }
+    }
+    
+    if (req.user.role === 'user') {
+      if (req.user.pincode && issue.location.pincode !== req.user.pincode) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your area.' });
+      }
     }
 
     // Use Set for O(1) lookup instead of O(n) array.find()
@@ -259,6 +323,19 @@ const assignIssue = async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
+    // Check if officer has access to this issue - must match BOTH department AND pincode
+    if (req.user.role === 'officer') {
+      if (!req.user.department || !req.user.pincode) {
+        return res.status(403).json({ message: 'Officer must have department and pincode assigned' });
+      }
+      if (issue.department !== req.user.department) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your department.' });
+      }
+      if (issue.location.pincode !== req.user.pincode) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your pincode area.' });
+      }
+    }
+
     const authority = await User.findById(authorityId);
 
     if (!authority || authority.role !== 'authority') {
@@ -300,6 +377,19 @@ const updateIssueStatus = async (req, res) => {
 
     if (!issue) {
       return res.status(404).json({ message: 'Issue not found' });
+    }
+
+    // Check if officer has access to this issue - must match BOTH department AND pincode
+    if (req.user.role === 'officer') {
+      if (!req.user.department || !req.user.pincode) {
+        return res.status(403).json({ message: 'Officer must have department and pincode assigned' });
+      }
+      if (issue.department !== req.user.department) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your department.' });
+      }
+      if (issue.location.pincode !== req.user.pincode) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your pincode area.' });
+      }
     }
 
     const previousStatus = issue.status;
@@ -356,6 +446,25 @@ const addComment = async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
+    // Check if user has access to this issue based on pincode
+    if (req.user.role === 'officer') {
+      if (!req.user.department || !req.user.pincode) {
+        return res.status(403).json({ message: 'Officer must have department and pincode assigned' });
+      }
+      if (issue.department !== req.user.department) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your department.' });
+      }
+      if (issue.location.pincode !== req.user.pincode) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your pincode area.' });
+      }
+    }
+    
+    if (req.user.role === 'user') {
+      if (req.user.pincode && issue.location.pincode !== req.user.pincode) {
+        return res.status(403).json({ message: 'Access denied. This issue is not in your area.' });
+      }
+    }
+
     issue.comments.push({
       user: req.user._id,
       text,
@@ -377,11 +486,24 @@ const addComment = async (req, res) => {
 // @access  Private (Admin/Authority)
 const getAnalytics = async (req, res) => {
   try {
+    // Build query filter based on user role
+    const matchFilter = {};
+    
+    // Filter by officer's department AND pincode if user is an officer
+    if (req.user && req.user.role === 'officer') {
+      if (!req.user.department || !req.user.pincode) {
+        return res.status(403).json({ message: 'Officer must have department and pincode assigned' });
+      }
+      matchFilter.department = req.user.department;
+      matchFilter['location.pincode'] = req.user.pincode;
+    }
+
     // Use Promise.all for parallel execution of independent queries
     const [totalIssues, statusCounts, issuesByCategory, issuesByPriority] = await Promise.all([
-      Issue.countDocuments(),
+      Issue.countDocuments(matchFilter),
       // Single aggregation for all status counts
       Issue.aggregate([
+        { $match: matchFilter },
         {
           $group: {
             _id: '$status',
@@ -390,6 +512,7 @@ const getAnalytics = async (req, res) => {
         },
       ]),
       Issue.aggregate([
+        { $match: matchFilter },
         {
           $group: {
             _id: '$category',
@@ -398,6 +521,7 @@ const getAnalytics = async (req, res) => {
         },
       ]),
       Issue.aggregate([
+        { $match: matchFilter },
         {
           $group: {
             _id: '$priority',

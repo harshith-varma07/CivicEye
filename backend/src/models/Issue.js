@@ -124,6 +124,9 @@ const issueSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Issue',
     },
+    similarity: Number, // Duplicate similarity score (0-1)
+    priority: String, // AI predicted priority
+    priorityScore: Number, // Priority confidence score (0-1)
     estimatedResolutionTime: Number, // in days
     predictedAt: Date,
   },

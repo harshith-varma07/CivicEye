@@ -47,15 +47,18 @@ services:
       - PORT=5000
       - MONGODB_URI=mongodb://admin:password123@mongodb:27017/civiceye?authSource=admin
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=civiceye-super-secret-jwt-key-2024
+      - JWT_SECRET=CivicEyeIsFuture@987
       - JWT_EXPIRE=7d
       - AI_SERVICE_URL=http://ai-services:8000
       - BLOCKCHAIN_RPC_URL=https://rpc-mumbai.maticvigil.com
-      - IPFS_PROJECT_ID=
-      - IPFS_PROJECT_SECRET=
-      - CLOUDINARY_CLOUD_NAME=
-      - CLOUDINARY_API_KEY=
-      - CLOUDINARY_API_SECRET=
+      - IPFS_PROJECT_ID=7d1c827d4e5f4994b4c5f21fcb735b25
+      - IPFS_PROJECT_SECRET=/t+/HZsdW6HqNu5tSXrxZKEuRuEVBnnFZjEFAk34R24AtYqymS9PBw
+      - CLOUDINARY_CLOUD_NAME=dhlm2y778
+      - CLOUDINARY_API_KEY=426381528418379
+      - CLOUDINARY_API_SECRET=wqtPm2ZkY5ESCPeEUMaeXvSgrRo
+      - FIREBASE_PROJECT_ID=civiceye-4c05a
+      - FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCo5hZHF2+HCaHi\nK/1mHPB+mCdSfdHWZvXEhcBaepiWKSUpL/Wb+IY2IVig24u9/97TXdCOOtwRQryx\nAuAS3dveKAzpsntso4jriAU5cog8lVJFoB765tThZVEZad2g1igL/kmpXm7EnivH\napRWTYczwfh22BTFr1jSXXeN+r2DODGysFVDFdkr/AxWvdNm8YXYDXtBiJlO72YH\nTq4X5Y9YWjIwzl/U1yLJFxoA5hfqbkWybw8ZddetsfdDbU56Y7d4Nnj2moQQ2s5G\nOQl5z0Rrrms+1Pd7h0tnINym0CQp/1Ifsyb3fzsnXJzmYuG2xhsrdMq9RPJ7s+3v\n1X3GJIstAgMBAAECggEAKO3VATZPKwitB5uEZR3nM65YfReLZar+rLiC1Ao4ds8S\nt8fs+3Z+w5hSG20IkKr0SwFFfGoMEUy8YCLjvP6xfMT02B8N5NY+ZGFKbtDv7cp7\nrO6wAzoz5UkBnah3cjXjb4CYRihhrFjuH/2WY9GWzXaYaOhVJFCpNBU9VxUnnqf2\ntecD9Uj7wzYz5pDB0zbP2COCfee63tcJ1j68wHnBzD1TBf+uN7vwWYyKlmQ9ESoc\nSFHBYnj9xszfT36JRlhZbpiiYsLoI0M/YwDinc4+7DEaRTa9WPuOCr2AqapeydLv\n37ogQlBKIdjTS7gMqiqStoMN+e3OaBvpmCZh0vvjuwKBgQDlIBVu2X5qcDC84eg0\nSjXetqGDi9igGRUmBlWJl8Z1HknsBS0vlAkau+4dmj1QbRHJIXcetdeLJJiOl6uT\nZ7e5AnB9SkX1SC5FH3pOwwrL39/kVF1hrb0iWubzl+vamPx1O68r3bZnxXt64rPH\nbwA+gkmhxPBeQpTyCiAh3nIlNwKBgQC8tZarw+rdn6yqZcrjRgVG9o36N7gJatKC\nhiBN/xPe8qUJIRFyzatp6ZH8Q9w/xitvp+Gw5CX0p/D4u2Ug7NiA0YH5x+PFpLrG\nWkQp5wHG++qp/I+cMQ3vE+PoL10cZ6Usfl3g/xDZFh52/rzi+KWmOWqpnG3hiobe\nwKBMqIWEuwKBgQDEdggqri7pER2ZN5MlEuSx/KLs6oJqdFdf7Vp2yj8OuVPlHmMq\nQqKz26RGmbQtO/heH2XGXWFeG5j72yzxDaPI7UCLDZ6CvMt/1YfH9RFS0rllTLlt\nQc3EoXEaOY+wNjFyTCTdVhRLUleYfL5uKM1qy8ha/0Sjbi/MgcYfhF8XbQKBgEO3\n7k/JSJkrWaz0RnB0iiRDCgQGxrYqbUyFkUYsCRdyf6LdCQPnpmGlfcvHFlyUYrX4\nytbNqIk5UxIPPWUpWTAw/rGB98zPJm9TqS5YRZ0Afd9uUKK+P7/RpXGGvaUZ1H45\nArthDMy6UUhmdaYFkHwsEoi3J/9N1MRO37diqjdNAoGAIMpjBvNQHlMSho6p7B2I\nBOR/v/DMU8sZUdyfKPyYq0yR5xAIImn0lCtQsWYqbDBVW2CcnMJd5JzegAoaZ8Wt\n8kCBk9hILcunQ/mHBHYIL+vjzFMmXCHIvO44ku+cADgH8jvmgpkD2fz20EJDQSeV\n9viEppup34VxdVmy2GWwaBg=\n-----END PRIVATE KEY-----\n
+      - FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@civiceye-4c05a.iam.gserviceaccount.com
     ports:
       - "5000:5000"
     depends_on:
@@ -91,8 +94,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - REACT_APP_API_URL=http://localhost:5000/api
-        - REACT_APP_AI_URL=http://localhost:8000
+        - REACT_APP_API_URL=/api
+        - REACT_APP_AI_URL=/ai
     container_name: civiceye-frontend
     restart: unless-stopped
     ports:
